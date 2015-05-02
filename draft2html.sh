@@ -24,25 +24,36 @@ while true; do
 	if [ $? -ne 0 ]; then
 		break
 	fi
+
 	linenum=`
 		echo $image | cut -d ':' -f 1`
 	filename=`
 		echo $image | cut -d ':' -f 2`
 	alt=`
 		echo $image | cut -d ':' -f 3`
+
 	if [ ! -f $filename ]; then
 		echo "$filename: No such image in this directory."
 		exit 1
 	fi
 
+	# 向き判定のついでに圧縮した画像を生成
+	filename_s=`echo $filename | sed -e 's/\.\(png\|jpeg\|jpg\)/-s.jpg/'`
 	width=`
 		identify $filename | cut -d ' ' -f 3 | cut -d 'x' -f 1`
 	height=`
 		identify $filename | cut -d ' ' -f 3 | cut -d 'x' -f 2`
+
 	if [ $width -ge $height ]; then
 		orientation='landscape'
+		if [ ! -f $filename_s ]; then
+			convert -geometry 588x $filename $filename_s
+		fi
 	else
 		orientation='portrait'
+		if [ ! -f $filename_s ]; then
+			convert -geometry 288x $filename $filename_s
+		fi
 	fi
 
 	# 連続して画像タグがある場合に、pタグをまとめる
@@ -54,12 +65,12 @@ while true; do
 		sed -i \
 			-e `expr $linenum - 1`'d' \
 			-e $linenum'a<\/p>' \
-			-e $linenum'c<a href="'$filename'"><img class="'$orientation'" src="'$filename'" alt="'$alt'"><\/a>' $tmp
+			-e $linenum'c<a href="'$filename'"><img class="'$orientation'" src="'$filename_s'" alt="'$alt'"><\/a>' $tmp
 	else
 		sed -i \
 			-e $linenum'i<p class="image">' \
 			-e $linenum'a<\/p>' \
-			-e $linenum'c<a href="'$filename'"><img class="'$orientation'" src="'$filename'" alt="'$alt'"><\/a>' $tmp
+			-e $linenum'c<a href="'$filename'"><img class="'$orientation'" src="'$filename_s'" alt="'$alt'"><\/a>' $tmp
 	fi
 done
 
