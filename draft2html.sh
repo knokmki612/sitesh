@@ -7,15 +7,56 @@ if [ $# -ne 1 ]; then
 	exit 1
 fi
 
+# スペースを含んだメッセージに対応するため、スペース区切りを無効化
+IFS_BACKUP=$IFS
+IFS=$'\n'
+
+date=`
+	echo $draft     |
+	cut -d '-' -f 1 |
+	date -f - +%Y/%m/%d`
+title=`
+	cat $draft      |
+	head -n 1       |
+	cut -d ':' -f 2 |
+	sed -e 's/^ *//g'`
+labels=`
+	cat $draft       |
+	head -n 2        |
+	tail -n 1        |
+	cut -d ':' -f 2  |
+	sed -e 's/^ *//g'|
+	tr , '\n'`
+
+# なんか変数スコープおかしいけどシェルのご愛嬌ってことで
+for label in `echo "$labels"`; do
+	labels_string=$labels_string`echo '<a href="'$label'">'$label'</a>',`
+done
+labels_string=`echo $labels_string | sed 's/,$//'`
+
+cat << HEADER > $tmp
+<article>
+<aside class="clearfix">
+<div class="social-icon">
+  <a href="index.html"><img src="twitter.svg" alt="Share on Twitter"></a>
+  <a href="index.html"><img src="facebook.svg" alt="Share on Facebook"></a>
+  <a href="index.html"><img src="googleplus.svg" alt="Share on Google+"></a>
+</div>
+<div class="date">
+  <time>$date</time>
+</div>
+<div class="labels">
+  $labels_string
+</div>
+</aside>
+<h2>$title</h2>
+HEADER
+
 # htmlタグに対応するための一時ファイル
 cat $draft    |
 sed '1,3d'    |
 grep -ve '^#' |
-tr -d '\r' > $tmp
-
-# スペースを含んだaltメッセージに対応するため、スペース区切りを無効化
-IFS_BACKUP=$IFS
-IFS=$'\n'
+tr -d '\r' >> $tmp
 
 # 上から順番に画像タグを検出
 while true; do
@@ -59,7 +100,7 @@ while true; do
 	# 連続して画像タグがある場合に、pタグをまとめる
 	if \
 		cat $tmp                     |
-		head -n $(expr $linenum - 2) |
+		head -n `expr $linenum - 2`  |
 		tail -n 1                    |
 		grep -sq -e '<img class="\(landscape\|portrait\)"'; then
 		sed -i \
@@ -77,7 +118,10 @@ done
 IFS=$IFS_BACKUP
 
 # brタグ、pタグを入れる
-sed -e 's/^$/<br>/g' -e 's/^\([^<].*\)/<p>\1<\/p>/g' $tmp
+sed -i -e 's/^$/<br>/g' -e 's/^\([^<| *].*\)/<p>\1<\/p>/g' $tmp
 
+echo '</article>' >> $tmp
+cat $tmp
 rm $tmp
+
 exit 0
