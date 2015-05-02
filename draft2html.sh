@@ -30,7 +30,7 @@ while true; do
 	filename=`
 		echo $image | cut -d ':' -f 2`
 	alt=`
-		echo $image | cut -d ':' -f 3`
+		echo $image | cut -d ':' -f 3 | sed -e 's/^ *//g'`
 
 	if [ ! -f $filename ]; then
 		echo "$filename: No such image in this directory."
