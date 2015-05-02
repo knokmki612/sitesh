@@ -3,7 +3,7 @@ draft=$1
 tmp=./tmp
 
 if [ $# -ne 1 ]; then
-	echo 'usage: draft2html [`date +%Y%M%d`-draft]'
+	echo 'usage: draft2html [`date +%Y%m%d`-draft]'
 	exit 1
 fi
 
