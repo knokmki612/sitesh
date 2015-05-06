@@ -1,6 +1,6 @@
 #!/bin/sh
 draft=$1
-tmp=./tmp
+tmp=`mktemp`
 
 if [ $# -ne 1 ]; then
 	echo 'usage: draft2html [`date +%Y%M%d`-draft]'
@@ -21,11 +21,11 @@ title=`
 	cut -d ':' -f 2 |
 	sed -e 's/^ *//g'`
 labels=`
-	cat $draft       |
-	head -n 2        |
-	tail -n 1        |
-	cut -d ':' -f 2  |
-	sed -e 's/^ *//g'|
+	cat $draft        |
+	head -n 2         |
+	tail -n 1         |
+	cut -d ':' -f 2   |
+	sed -e 's/^ *//g' |
 	tr , '\n'`
 
 # なんか変数スコープおかしいけどシェルのご愛嬌ってことで
@@ -99,9 +99,9 @@ while true; do
 
 	# 連続して画像タグがある場合に、pタグをまとめる
 	if \
-		cat $tmp                     |
-		head -n `expr $linenum - 2`  |
-		tail -n 1                    |
+		cat $tmp                    |
+		head -n `expr $linenum - 2` |
+		tail -n 1                   |
 		grep -sq -e '<img class="\(landscape\|portrait\)"'; then
 		sed -i \
 			-e `expr $linenum - 1`'d' \
@@ -118,7 +118,36 @@ done
 IFS=$IFS_BACKUP
 
 # brタグ、pタグを入れる
-sed -i -e 's/^$/<br>/g' -e 's/^\([^<| *].*\)/<p>\1<\/p>/g' $tmp
+# preタグに含まれる行をスキップする
+if grep -sq -e '<pre\([^<]*>\)' $tmp; then
+	start_pre=`mktemp`
+	end_pre=`mktemp`
+	echo 0 > $end_pre
+	grep -n -e '<pre\([^<]*>\)' $tmp | cut -d ':' -f 1 > $start_pre
+	grep -n -e '</pre\([^<]*>\)' $tmp | cut -d ':' -f 1 >> $end_pre
+	expr `wc -l $tmp | cut -d ' ' -f 1` + 1 >> $start_pre
+	pre_range=`paste -d ',' $end_pre $start_pre`
+	for range in `echo "$pre_range"`; do
+		start=`echo $range | cut -d ',' -f 1`
+		start=`expr $start + 1`
+		end=`echo $range | cut -d ',' -f 2`
+		end=`expr $end - 1`
+		if [ $start -lt $end ]; then
+			sed -i \
+				-e $start,$end's/^$/<br>/g' \
+				-e $start,$end's/^\([^<| *].*\)/<p>\1<\/p>/g' $tmp
+		else
+			sed -i \
+				-e $start's/^$/<br>/g' \
+				-e $start's/^\([^<| *].*\)/<p>\1<\/p>/g' $tmp
+		fi
+	done
+	rm $start_pre $end_pre
+else
+	sed -i \
+		-e 's/^$/<br>/g' \
+		-e 's/^\([^<| *].*\)/<p>\1<\/p>/g' $tmp
+fi
 
 echo '</article>' >> $tmp
 cat $tmp
