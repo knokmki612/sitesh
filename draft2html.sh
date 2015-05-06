@@ -122,16 +122,19 @@ IFS=$IFS_BACKUP
 if grep -sq -e '<pre\([^<]*>\)' $tmp; then
 	start_pre=`mktemp`
 	end_pre=`mktemp`
+	
 	echo 0 > $end_pre
 	grep -n -e '<pre\([^<]*>\)' $tmp | cut -d ':' -f 1 > $start_pre
 	grep -n -e '</pre\([^<]*>\)' $tmp | cut -d ':' -f 1 >> $end_pre
 	expr `wc -l $tmp | cut -d ' ' -f 1` + 1 >> $start_pre
 	pre_range=`paste -d ',' $end_pre $start_pre`
+
 	for range in `echo "$pre_range"`; do
 		start=`echo $range | cut -d ',' -f 1`
 		start=`expr $start + 1`
 		end=`echo $range | cut -d ',' -f 2`
 		end=`expr $end - 1`
+
 		if [ $start -lt $end ]; then
 			sed -i \
 				-e $start,$end's/^$/<br>/g' \
