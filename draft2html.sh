@@ -14,7 +14,7 @@ IFS=$'\n'
 date=`
 	echo $draft     |
 	cut -d '-' -f 1 |
-	date -f - +%Y/%m/%d`
+	date -f - +%Y/%m/%d` || exit 1
 title=`
 	cat $draft      |
 	head -n 1       |
