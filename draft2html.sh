@@ -1,20 +1,16 @@
 #!/bin/sh
-draft=$1
-tmp=`mktemp`
-
 if [ $# -ne 1 ]; then
-	echo 'usage: draft2html [`date +%Y%m%d`-draft]'
+	echo 'Usage: draft2html [`date +%Y%m%d`-draft]'
 	exit 1
 fi
 
-# スペースを含んだメッセージに対応するため、スペース区切りを無効化
-IFS_BACKUP=$IFS
-IFS=$'\n'
+cd `dirname $1`
+draft=`basename $1`
+tmp=`mktemp`
 
-date=`
-	echo $draft     |
-	cut -d '-' -f 1 |
-	date -f - +%Y/%m/%d` || exit 1
+raw_date=`echo $draft | cut -d '-' -f 1`
+formatted_date=`echo $raw_date | date -f - +%Y/%m/%d` || exit 1
+
 title=`
 	cat $draft      |
 	head -n 1       |
@@ -27,6 +23,23 @@ labels=`
 	cut -d ':' -f 2   |
 	sed -e 's/^ *//g' |
 	tr , '\n'`
+permalink=`
+	cat $draft      |
+	head -n 3       |
+	tail -n 1       |
+	cut -d ':' -f 2 |
+	sed -e 's/^ *//g'`
+
+if [ "$permalink" = "" ]; then
+	echo 'Please set permalink start from alphanumeric character.'
+	exit 1
+fi
+
+post="$raw_date-$permalink"
+
+if [ ! -d $post ]; then
+	mkdir $post
+fi
 
 # なんか変数スコープおかしいけどシェルのご愛嬌ってことで
 for label in `echo "$labels"`; do
@@ -43,7 +56,7 @@ cat << HEADER > $tmp
   <a href="index.html"><img src="googleplus.svg" alt="Share on Google+"></a>
 </div>
 <div class="date">
-  <time>$date</time>
+  <time>$formatted_date</time>
 </div>
 <div class="labels">
   $labels_string
@@ -54,14 +67,18 @@ HEADER
 
 # htmlタグに対応するための一時ファイル
 cat $draft    |
-sed '1,3d'    |
+sed '1,4d'    |
 grep -ve '^#' |
 tr -d '\r' >> $tmp
+
+# スペースを含んだメッセージに対応するため、スペース区切りを無効化
+IFS_BACKUP=$IFS
+IFS=$'\n'
 
 # 上から順番に画像タグを検出
 while true; do
 	image=`
-		grep -n -m 1 -e '\(.*.png\|.*.jpeg\|.*.jpg\):' $tmp`
+		grep -n -m 1 -e '.*\.\(png\|jpeg\|jpg\):' $tmp`
 	if [ $? -ne 0 ]; then
 		break
 	fi
@@ -78,6 +95,8 @@ while true; do
 		exit 1
 	fi
 
+	cp $filename $post/$filename
+
 	# 向き判定のついでに圧縮した画像を生成
 	filename_s=`echo $filename | sed -e 's/\.\(png\|jpeg\|jpg\)/-s.jpg/'`
 	width=`
@@ -87,13 +106,13 @@ while true; do
 
 	if [ $width -ge $height ]; then
 		orientation='landscape'
-		if [ ! -f $filename_s ]; then
-			convert -geometry 588x $filename $filename_s
+		if [ ! -f $post/$filename_s ]; then
+			convert -geometry 588x $filename $post/$filename_s
 		fi
 	else
 		orientation='portrait'
-		if [ ! -f $filename_s ]; then
-			convert -geometry 288x $filename $filename_s
+		if [ ! -f $post/$filename_s ]; then
+			convert -geometry 288x $filename $post/$filename_s
 		fi
 	fi
 
@@ -153,7 +172,10 @@ else
 fi
 
 echo '</article>' >> $tmp
-cat $tmp
+
+cd $post
+cat ../$draft > draft
+cat $tmp > html
 rm $tmp
 
 exit 0
