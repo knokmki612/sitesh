@@ -1,6 +1,6 @@
 #!/bin/sh
 if [ $# -ne 1 ]; then
-	echo 'Usage: draft2html [`date +%Y%m%d`-draft]'
+	echo 'usage: draft2html [`date +%Y%m%d`-draft]'
 	exit 1
 fi
 
@@ -31,7 +31,7 @@ permalink=`
 	sed -e 's/^ *//g'`
 
 if [ "$permalink" = "" ]; then
-	echo 'Please set permalink start from alphanumeric character.'
+	echo "$draft: Please set permalink start from alphanumeric character."
 	exit 1
 fi
 
