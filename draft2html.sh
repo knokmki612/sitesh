@@ -31,7 +31,7 @@ permalink=`
 	sed -e 's/^ *//g'`
 
 if [ "$permalink" = "" ]; then
-	echo "$draft: Please set permalink start from alphanumeric character."
+	echo "$draft: Please set permalink at start from alphanumeric character."
 	exit 1
 fi
 
