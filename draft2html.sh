@@ -1,4 +1,6 @@
 #!/bin/sh
+
+DOCUMENT_ROOT_RELATIVE_PATH='posts/'
 if [ $# -ne 1 ]; then
 	echo 'usage: draft2html [`date +%Y%m%d`-draft]'
 	exit 1
@@ -36,6 +38,7 @@ if [ "$permalink" = "" ]; then
 fi
 
 post="$raw_date-$permalink"
+server_post_path=$DOCUMENT_ROOT_RELATIVE_PATH$post
 
 if [ ! -d $post ]; then
 	mkdir $post
@@ -96,6 +99,7 @@ while true; do
 	fi
 
 	cp $filename $post/$filename
+	chmod 644 $post/$filename
 
 	# 向き判定のついでに圧縮した画像を生成
 	filename_s=`echo $filename | sed -e 's/\.\(png\|jpeg\|jpg\)/-s.jpg/'`
@@ -125,12 +129,12 @@ while true; do
 		sed -i \
 			-e `expr $linenum - 1`'d' \
 			-e $linenum'a<\/p>' \
-			-e $linenum'c<a href="'$filename'"><img class="'$orientation'" src="'$filename_s'" alt="'$alt'"><\/a>' $tmp
+			-e $linenum'c<a href="'$server_post_path/$filename'"><img class="'$orientation'" src="'$server_post_path/$filename_s'" alt="'$alt'"><\/a>' $tmp
 	else
 		sed -i \
 			-e $linenum'i<p class="image">' \
 			-e $linenum'a<\/p>' \
-			-e $linenum'c<a href="'$filename'"><img class="'$orientation'" src="'$filename_s'" alt="'$alt'"><\/a>' $tmp
+			-e $linenum'c<a href="'$server_post_path/$filename'"><img class="'$orientation'" src="'$server_post_path/$filename_s'" alt="'$alt'"><\/a>' $tmp
 	fi
 done
 
