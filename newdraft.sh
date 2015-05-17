@@ -1,5 +1,5 @@
 #!/bin/sh
-cat << EOL > `date +%Y%m%d`-draft
+cat << EOL > `date +%Y%m%d%H%M%S`-draft
 Title: 
 Label: 
 Permalink: 

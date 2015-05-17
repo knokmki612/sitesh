@@ -11,7 +11,7 @@ draft=`basename $1`
 tmp=`mktemp`
 
 raw_date=`echo $draft | cut -d '-' -f 1`
-formatted_date=`echo $raw_date | date -f - +%Y/%m/%d` || exit 1
+formatted_date=`echo $raw_date | cut -c 1-8 | date -f - +%Y/%m/%d` || exit 1
 
 title=`
 	cat $draft      |
