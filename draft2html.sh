@@ -65,7 +65,7 @@ cat << HEADER > $tmp
   $labels_string
 </div>
 </aside>
-<h2><a href="$server_post_path/html">$title</a></h2>
+<h2><a href="index.cgi?post=$post">$title</a></h2>
 HEADER
 
 # htmlタグに対応するための一時ファイル
