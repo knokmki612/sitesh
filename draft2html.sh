@@ -178,6 +178,8 @@ fi
 echo '</article>' >> $tmp
 
 cd $post
+echo $title > title
+echo "$labels" > label
 cat ../$draft > draft
 cat $tmp > html
 rm $tmp
