@@ -49,7 +49,7 @@ if [ ! -d $post ]; then
 fi
 
 for label in `echo "$labels"`; do
-	labels_string=$labels_string`echo '<a href="'?label=$label'">'$label'</a>',`
+	labels_string=$labels_string`echo '<a href="$SITE_URL?label='$label'">'$label'</a>',`
 done
 labels_string=`echo $labels_string | sed 's/,$//'`
 
@@ -57,9 +57,9 @@ cat << HEADER > $tmp
 <article>
 <aside class="clearfix">
 <div class="social-icon">
-  <a href="http://twitter.com/share?url=\${SITE_URL}post/$post&text=$title_encoded"><img src="/twitter.svg" alt="Share on Twitter"></a>
-  <a href="http://www.facebook.com/sharer.php?u=\${SITE_URL}post/$post"><img src="/facebook.svg" alt="Share on Facebook"></a>
-  <a href="https://plusone.google.com/_/+1/confirm?hl=ja&url=\${SITE_URL}post/$post"><img src="/googleplus.svg" alt="Share on Google+"></a>
+  <a href="http://twitter.com/share?url=\${SITE_URL}post/$post&text=$title_encoded"><span class="icon-twitter"></span></a>
+  <a href="http://www.facebook.com/sharer.php?u=\${SITE_URL}post/$post"><span class="icon-facebook"></span></a>
+  <a href="https://plusone.google.com/_/+1/confirm?hl=ja&url=\${SITE_URL}post/$post"><span class="icon-googleplus"</span></a>
 </div>
 <div class="date">
   <time>$formatted_date</time>
@@ -101,8 +101,9 @@ while true; do
 		exit 1
 	fi
 
-	cp $filename $post/$filename
-	chmod 644 $post/$filename
+	if [ ! -f $post/$filename ]; then
+		cp $filename $post/$filename &
+	fi
 
 	# 向き判定のついでに圧縮した画像を生成
 	filename_s=`echo $filename | sed -e 's/\.\(png\|jpeg\|jpg\)/-s.jpg/'`
@@ -114,12 +115,12 @@ while true; do
 	if [ $width -ge $height ]; then
 		orientation='landscape'
 		if [ ! -f $post/$filename_s ]; then
-			convert -geometry 588x $filename $post/$filename_s
+			convert -geometry 588x $filename $post/$filename_s &
 		fi
 	else
 		orientation='portrait'
 		if [ ! -f $post/$filename_s ]; then
-			convert -geometry 288x $filename $post/$filename_s
+			convert -geometry 288x $filename $post/$filename_s &
 		fi
 	fi
 
@@ -132,12 +133,12 @@ while true; do
 		sed -i \
 			-e `expr $linenum - 1`'d' \
 			-e $linenum'a<\/p>' \
-			-e $linenum'c<a href="${SITE_POST_DIR}'$post/$filename'"><img class="'$orientation'" src="${SITE_POST_DIR}'$post/$filename_s'" alt="'$alt'"><\/a>' $tmp
+			-e $linenum'c<a href="$SITE_URL${SITE_POSTS_DIR}'$post/$filename'"><img class="'$orientation'" src="$SITE_URL${SITE_POSTS_DIR}'$post/$filename_s'" alt="'$alt'"><\/a>' $tmp
 	else
 		sed -i \
 			-e $linenum'i<p class="image">' \
 			-e $linenum'a<\/p>' \
-			-e $linenum'c<a href="${SITE_POST_DIR}'$post/$filename'"><img class="'$orientation'" src="${SITE_POST_DIR}'$post/$filename'" alt="'$alt'"><\/a>' $tmp
+			-e $linenum'c<a href="$SITE_URL${SITE_POSTS_DIR}'$post/$filename'"><img class="'$orientation'" src="$SITE_URL${SITE_POSTS_DIR}'$post/$filename_s'" alt="'$alt'"><\/a>' $tmp
 	fi
 done
 
@@ -191,4 +192,6 @@ cat ../$draft > draft
 cat $tmp > html
 rm $tmp
 
+wait
+find -regextype posix-egrep -regex ".*\.(png|jpg|jpeg)" | xargs chmod 644
 exit 0
