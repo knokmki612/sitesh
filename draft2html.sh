@@ -1,6 +1,5 @@
 #!/bin/sh
 
-DOCUMENT_ROOT_RELATIVE_PATH='posts/'
 if [ $# -ne 1 ]; then
 	echo 'usage: draft2html [`date +%Y%m%d`-draft]'
 	exit 1
@@ -18,6 +17,12 @@ title=`
 	head -n 1       |
 	cut -d ':' -f 2 |
 	sed -e 's/^ *//g'`
+title_encoded=`
+	echo $title' - 横あるき' |
+	nkf -WwMQ                |
+	sed 's/=$//'             |
+	tr -d '\n'               |
+	tr = % `
 labels=`
 	cat $draft        |
 	head -n 2         |
@@ -38,15 +43,13 @@ if [ "$permalink" = "" ]; then
 fi
 
 post="$raw_date-$permalink"
-server_post_path=$DOCUMENT_ROOT_RELATIVE_PATH$post
 
 if [ ! -d $post ]; then
 	mkdir $post
 fi
 
-# なんか変数スコープおかしいけどシェルのご愛嬌ってことで
 for label in `echo "$labels"`; do
-	labels_string=$labels_string`echo '<a href="'$label'">'$label'</a>',`
+	labels_string=$labels_string`echo '<a href="'?label=$label'">'$label'</a>',`
 done
 labels_string=`echo $labels_string | sed 's/,$//'`
 
@@ -54,9 +57,9 @@ cat << HEADER > $tmp
 <article>
 <aside class="clearfix">
 <div class="social-icon">
-  <a href="index.html"><img src="twitter.svg" alt="Share on Twitter"></a>
-  <a href="index.html"><img src="facebook.svg" alt="Share on Facebook"></a>
-  <a href="index.html"><img src="googleplus.svg" alt="Share on Google+"></a>
+  <a href="http://twitter.com/share?url=\${SITE_URL}post/$post&text=$title_encoded"><img src="/twitter.svg" alt="Share on Twitter"></a>
+  <a href="http://www.facebook.com/sharer.php?u=\${SITE_URL}post/$post"><img src="/facebook.svg" alt="Share on Facebook"></a>
+  <a href="https://plusone.google.com/_/+1/confirm?hl=ja&url=\${SITE_URL}post/$post"><img src="/googleplus.svg" alt="Share on Google+"></a>
 </div>
 <div class="date">
   <time>$formatted_date</time>
@@ -65,7 +68,7 @@ cat << HEADER > $tmp
   $labels_string
 </div>
 </aside>
-<h2><a href="index.cgi?post=$post">$title</a></h2>
+<h2><a href="\${SITE_URL}post/$post">$title</a></h2>
 HEADER
 
 # htmlタグに対応するための一時ファイル
@@ -129,12 +132,12 @@ while true; do
 		sed -i \
 			-e `expr $linenum - 1`'d' \
 			-e $linenum'a<\/p>' \
-			-e $linenum'c<a href="'$server_post_path/$filename'"><img class="'$orientation'" src="'$server_post_path/$filename_s'" alt="'$alt'"><\/a>' $tmp
+			-e $linenum'c<a href="${SITE_POST_DIR}'$post/$filename'"><img class="'$orientation'" src="${SITE_POST_DIR}'$post/$filename_s'" alt="'$alt'"><\/a>' $tmp
 	else
 		sed -i \
 			-e $linenum'i<p class="image">' \
 			-e $linenum'a<\/p>' \
-			-e $linenum'c<a href="'$server_post_path/$filename'"><img class="'$orientation'" src="'$server_post_path/$filename_s'" alt="'$alt'"><\/a>' $tmp
+			-e $linenum'c<a href="${SITE_POST_DIR}'$post/$filename'"><img class="'$orientation'" src="${SITE_POST_DIR}'$post/$filename'" alt="'$alt'"><\/a>' $tmp
 	fi
 done
 
@@ -175,7 +178,11 @@ else
 		-e 's/^\([^<| *].*\)/<p>\1<\/p>/g' $tmp
 fi
 
-echo '</article>' >> $tmp
+cat << FOOTER >> $tmp
+</article>
+FOOTER
+
+sed -i -e '1icat << EOF' -e '$aEOF' $tmp
 
 cd $post
 echo $title > title
