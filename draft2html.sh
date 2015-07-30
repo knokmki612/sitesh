@@ -49,7 +49,13 @@ if [ ! -d $post ]; then
 fi
 
 for label in `echo "$labels"`; do
-	labels_string=$labels_string`echo '<a href="$SITE_URL?label='$label'">'$label'</a>',`
+	label_encoded=`
+	echo $label  |
+	nkf -WwMQ    |
+	sed 's/=$//' |
+	tr -d '\n'   |
+	tr = %`
+	labels_string=$labels_string`echo '<a href="$SITE_URL?label='$label_encoded'">'$label'</a>',`
 done
 labels_string=`echo $labels_string | sed 's/,$//'`
 
