@@ -18,10 +18,10 @@ title=`
 	cut -d ':' -f 2 |
 	sed -e 's/^ *//g'`
 title_encoded=`
-	echo $title' - 横あるき' |
-	nkf -WwMQ                |
-	sed 's/=$//'             |
-	tr -d '\n'               |
+	echo "$title" |
+	nkf -WwMQ     |
+	sed 's/=$//'  |
+	tr -d '\n'    |
 	tr = % `
 labels=`
 	cat $draft        |
@@ -57,7 +57,7 @@ cat << HEADER > $tmp
 <article>
 <aside class="clearfix">
 <div class="social-icon">
-  <a href="http://twitter.com/share?url=\${SITE_URL}post/$post&text=$title_encoded"><span class="icon-twitter"></span></a>
+  <a href="http://twitter.com/share?url=\${SITE_URL}post/$post&text=$title_encoded\$SITE_TITLE_TAIL_ENCODED"><span class="icon-twitter"></span></a>
   <a href="http://www.facebook.com/sharer.php?u=\${SITE_URL}post/$post"><span class="icon-facebook"></span></a>
   <a href="https://plusone.google.com/_/+1/confirm?hl=ja&url=\${SITE_URL}post/$post"><span class="icon-googleplus"</span></a>
 </div>
@@ -193,5 +193,5 @@ cat $tmp > html
 rm $tmp
 
 wait
-find -regextype posix-egrep -regex ".*\.(png|jpg|jpeg)" | xargs chmod 644
+find -regextype posix-egrep -regex ".*\.(png|jpg|jpeg)" | xargs --no-run-if-empty chmod 644
 exit 0
