@@ -80,7 +80,6 @@ HEADER
 # htmlタグに対応するための一時ファイル
 cat $draft    |
 sed '1,4d'    |
-grep -ve '^#' |
 tr -d '\r' >> $tmp
 
 # スペースを含んだメッセージに対応するため、スペース区切りを無効化
@@ -189,6 +188,7 @@ cat << FOOTER >> $tmp
 </article>
 FOOTER
 
+# ヒアドキュメントでテンプレート化
 sed -i -e '1icat << EOF' -e '$aEOF' $tmp
 
 cd $post
