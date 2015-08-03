@@ -94,17 +94,27 @@ while true; do
 		break
 	fi
 
-	linenum=$(
-		echo $image | cut -d ':' -f 1)
-	filename=$(
-		echo $image | cut -d ':' -f 2)
-	alt=$(
-		echo $image | cut -d ':' -f 3 | sed -e 's/^ *//g')
+	linenum=$(echo $image | cut -d ':' -f 1)
 
-	if [ ! -f $filename ]; then
+	if echo $image | grep -E ':https?://[^:]*'; then
+		filename=$(
+			echo $image | cut -d ':' -f 2-3)
+		alt=$(
+			echo $image | cut -d ':' -f 4 | sed -e 's/^ *//g')
+		filename_url="$filename"
+		wget $filename
+		filename=$(basename $filename)
+	elif [ -f $filename ]; then
+		filename=$(
+			echo $image | cut -d ':' -f 2)
+		alt=$(
+			echo $image | cut -d ':' -f 3 | sed -e 's/^ *//g')
+		filename_url="\$SITE_URL\${SITE_POSTS_DIR}$post/$filename"
+	else
 		echo "$filename: No such image in this directory."
 		exit 1
 	fi
+	filename_s_url="\$SITE_URL\${SITE_POSTS_DIR}$post/$filename"
 
 	if [ ! -f $post/$filename ]; then
 		cp $filename $post/$filename &
@@ -145,12 +155,12 @@ while true; do
 		sed -i \
 			-e $(($linenum - 1))'d' \
 			-e $linenum'a<\/p>' \
-			-e $linenum'c<a href="$SITE_URL${SITE_POSTS_DIR}'$post/$filename'"><img class="'$orientation'" src="$SITE_URL${SITE_POSTS_DIR}'$post/$filename_s'" alt="'$alt'"><\/a>' $tmp
+			-e $linenum"c<a href=\"$filename_url\"><img class=\"$orientation\" src=\"$filename_s_url\" alt=\"$alt\"><\/a>" $tmp
 	else
 		sed -i \
 			-e $linenum'i<p class="image">' \
 			-e $linenum'a<\/p>' \
-			-e $linenum'c<a href="$SITE_URL${SITE_POSTS_DIR}'$post/$filename'"><img class="'$orientation'" src="$SITE_URL${SITE_POSTS_DIR}'$post/$filename_s'" alt="'$alt'"><\/a>' $tmp
+			-e $linenum"c<a href=\"$filename_url\"><img class=\"$orientation\" src=\"$filename_s_url\" alt=\"$alt\"><\/a>" $tmp
 	fi
 done
 
@@ -165,7 +175,7 @@ if grep -sq -e '<pre\([^<]*>\)' $tmp; then
 	echo 0 > $end_pre
 	grep -n -e '<pre\([^<]*>\)' $tmp | cut -d ':' -f 1 > $start_pre
 	grep -n -e '</pre\([^<]*>\)' $tmp | cut -d ':' -f 1 >> $end_pre
-	$(($(wc -l $tmp | cut -d ' ' -f 1) + 1)) >> $start_pre
+	echo $(($(wc -l $tmp | cut -d ' ' -f 1) + 1)) >> $start_pre
 	pre_range=$(paste -d ',' $end_pre $start_pre)
 
 	for range in $(echo "$pre_range"); do
