@@ -1,41 +1,41 @@
-#!/bin/sh
+#!/bin/dash
 
 if [ $# -ne 1 ]; then
-	echo 'usage: draft2html [`date +%Y%m%d`-draft]'
+	echo 'usage: draft2html [$(date +%Y%m%d)-draft]'
 	exit 1
 fi
 
-cd `dirname $1`
-draft=`basename $1`
-tmp=`mktemp`
+cd $(dirname $1)
+draft=$(basename $1)
+tmp=$(mktemp)
 
-raw_date=`echo $draft | cut -d '-' -f 1`
-formatted_date=`echo $raw_date | cut -c 1-8 | date -f - +%Y/%m/%d` || exit 1
+raw_date=$(echo $draft | cut -d '-' -f 1)
+formatted_date=$(echo $raw_date | cut -c 1-8 | date -f - +%Y/%m/%d) || exit 1
 
-title=`
+title=$(
 	cat $draft      |
 	head -n 1       |
 	cut -d ':' -f 2 |
-	sed -e 's/^ *//g'`
-title_encoded=`
+	sed -e 's/^ *//g')
+title_encoded=$(
 	echo "$title" |
 	nkf -WwMQ     |
 	sed 's/=$//'  |
 	tr -d '\n'    |
-	tr = % `
-labels=`
+	tr = %)
+labels=$(
 	cat $draft        |
 	head -n 2         |
 	tail -n 1         |
 	cut -d ':' -f 2   |
 	sed -e 's/^ *//g' |
-	tr , '\n'`
-permalink=`
+	tr , '\n')
+permalink=$(
 	cat $draft      |
 	head -n 3       |
 	tail -n 1       |
 	cut -d ':' -f 2 |
-	sed -e 's/^ *//g'`
+	sed -e 's/^ *//g')
 
 if [ "$permalink" = "" ]; then
 	echo "$draft: Please set permalink at start from alphanumeric character."
@@ -48,16 +48,16 @@ if [ ! -d $post ]; then
 	mkdir $post
 fi
 
-for label in `echo "$labels"`; do
-	label_encoded=`
+for label in $(echo "$labels"); do
+	label_encoded=$(
 	echo $label  |
 	nkf -WwMQ    |
 	sed 's/=$//' |
 	tr -d '\n'   |
-	tr = %`
-	labels_string=$labels_string`echo '<a href="$SITE_URL?label='$label_encoded'">'$label'</a>',`
+	tr = %)
+	labels_string=$labels_string$(echo '<a href="$SITE_URL?label='$label_encoded'">'$label'</a>',)
 done
-labels_string=`echo $labels_string | sed 's/,$//'`
+labels_string=$(echo $labels_string | sed 's/,$//')
 
 cat << HEADER > $tmp
 <article>
@@ -78,28 +78,28 @@ cat << HEADER > $tmp
 HEADER
 
 # htmlタグに対応するための一時ファイル
-cat $draft    |
-sed '1,4d'    |
+cat $draft |
+sed '1,4d' |
 tr -d '\r' >> $tmp
 
 # スペースを含んだメッセージに対応するため、スペース区切りを無効化
 IFS_BACKUP=$IFS
-IFS=$'\n'
-
+IFS='
+'
 # 上から順番に画像タグを検出
 while true; do
-	image=`
-		grep -n -m 1 -e '.*\.\(png\|jpeg\|jpg\):' $tmp`
+	image=$(grep -n -m 1 -e '.*\.\(png\|jpeg\|jpg\):' $tmp)
+
 	if [ $? -ne 0 ]; then
 		break
 	fi
 
-	linenum=`
-		echo $image | cut -d ':' -f 1`
-	filename=`
-		echo $image | cut -d ':' -f 2`
-	alt=`
-		echo $image | cut -d ':' -f 3 | sed -e 's/^ *//g'`
+	linenum=$(
+		echo $image | cut -d ':' -f 1)
+	filename=$(
+		echo $image | cut -d ':' -f 2)
+	alt=$(
+		echo $image | cut -d ':' -f 3 | sed -e 's/^ *//g')
 
 	if [ ! -f $filename ]; then
 		echo "$filename: No such image in this directory."
@@ -111,11 +111,11 @@ while true; do
 	fi
 
 	# 向き判定のついでに圧縮した画像を生成
-	filename_s=`echo $filename | sed -e 's/\.\(png\|jpeg\|jpg\)/-s.jpg/'`
-	width=`
-		identify $filename | cut -d ' ' -f 3 | cut -d 'x' -f 1`
-	height=`
-		identify $filename | cut -d ' ' -f 3 | cut -d 'x' -f 2`
+	filename_s=$(echo $filename | sed -e 's/\.\(png\|jpeg\|jpg\)/-s.jpg/')
+	width=$(
+		identify $filename | cut -d ' ' -f 3 | cut -d 'x' -f 1)
+	height=$(
+		identify $filename | cut -d ' ' -f 3 | cut -d 'x' -f 2)
 
 	if [ $width -ge $height ]; then
 		orientation='landscape'
@@ -131,12 +131,12 @@ while true; do
 
 	# 連続して画像タグがある場合に、pタグをまとめる
 	if \
-		cat $tmp                    |
-		head -n `expr $linenum - 2` |
-		tail -n 1                   |
+		cat $tmp                  |
+		head -n $(($linenum - 2)) |
+		tail -n 1                 |
 		grep -sq -e '<img class="\(landscape\|portrait\)"'; then
 		sed -i \
-			-e `expr $linenum - 1`'d' \
+			-e $(($linenum - 1))'d' \
 			-e $linenum'a<\/p>' \
 			-e $linenum'c<a href="$SITE_URL${SITE_POSTS_DIR}'$post/$filename'"><img class="'$orientation'" src="$SITE_URL${SITE_POSTS_DIR}'$post/$filename_s'" alt="'$alt'"><\/a>' $tmp
 	else
@@ -152,20 +152,20 @@ IFS=$IFS_BACKUP
 # brタグ、pタグを入れる
 # preタグに含まれる行をスキップする
 if grep -sq -e '<pre\([^<]*>\)' $tmp; then
-	start_pre=`mktemp`
-	end_pre=`mktemp`
+	start_pre=$(mktemp)
+	end_pre=$(mktemp)
 	
 	echo 0 > $end_pre
 	grep -n -e '<pre\([^<]*>\)' $tmp | cut -d ':' -f 1 > $start_pre
 	grep -n -e '</pre\([^<]*>\)' $tmp | cut -d ':' -f 1 >> $end_pre
-	expr `wc -l $tmp | cut -d ' ' -f 1` + 1 >> $start_pre
-	pre_range=`paste -d ',' $end_pre $start_pre`
+	$(($(wc -l $tmp | cut -d ' ' -f 1) + 1)) >> $start_pre
+	pre_range=$(paste -d ',' $end_pre $start_pre)
 
-	for range in `echo "$pre_range"`; do
-		start=`echo $range | cut -d ',' -f 1`
-		start=`expr $start + 1`
-		end=`echo $range | cut -d ',' -f 2`
-		end=`expr $end - 1`
+	for range in $(echo "$pre_range"); do
+		start=$(echo $range | cut -d ',' -f 1)
+		start=$(($start + 1))
+		end=$(echo $range | cut -d ',' -f 2)
+		end=$(($end - 1))
 
 		if [ $start -lt $end ]; then
 			sed -i \
