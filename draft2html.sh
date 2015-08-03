@@ -101,20 +101,28 @@ while true; do
 			echo $image | cut -d ':' -f 2-3)
 		alt=$(
 			echo $image | cut -d ':' -f 4 | sed -e 's/^ *//g')
+
 		filename_url="$filename"
-		wget $filename
 		filename=$(basename $filename)
+
+		# 既にローカルにファイルがあったら取ってこない
+		if [ -f $filename ]; then
+			wget --spider $filename_url || exit 1
+		else
+			wget $filename_url || exit 1
+		fi
+
 	elif [ -f $filename ]; then
 		filename=$(
 			echo $image | cut -d ':' -f 2)
 		alt=$(
 			echo $image | cut -d ':' -f 3 | sed -e 's/^ *//g')
+
 		filename_url="\$SITE_URL\${SITE_POSTS_DIR}$post/$filename"
 	else
 		echo "$filename: No such image in this directory."
 		exit 1
 	fi
-	filename_s_url="\$SITE_URL\${SITE_POSTS_DIR}$post/$filename"
 
 	if [ ! -f $post/$filename ]; then
 		cp $filename $post/$filename &
@@ -122,6 +130,7 @@ while true; do
 
 	# 向き判定のついでに圧縮した画像を生成
 	filename_s=$(echo $filename | sed -e 's/\.\(png\|jpeg\|jpg\)/-s.jpg/')
+	filename_s_url="\$SITE_URL\${SITE_POSTS_DIR}$post/$filename_s"
 	width=$(
 		file $filename                 |
 		grep -oE ", [0-9]+ ?x ?[0-9]+" |
