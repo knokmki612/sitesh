@@ -113,9 +113,16 @@ while true; do
 	# 向き判定のついでに圧縮した画像を生成
 	filename_s=$(echo $filename | sed -e 's/\.\(png\|jpeg\|jpg\)/-s.jpg/')
 	width=$(
-		identify $filename | cut -d ' ' -f 3 | cut -d 'x' -f 1)
+		file $filename                 |
+		grep -oE ", [0-9]+ ?x ?[0-9]+" |
+		grep -oE "[0-9]+"              |
+		head -n 1)
+
 	height=$(
-		identify $filename | cut -d ' ' -f 3 | cut -d 'x' -f 2)
+		file $filename                 |
+		grep -oE ", [0-9]+ ?x ?[0-9]+" |
+		grep -oE "[0-9]+"              |
+		tail -n 1)
 
 	if [ $width -ge $height ]; then
 		orientation='landscape'
