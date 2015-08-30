@@ -145,14 +145,20 @@ while true; do
 
 	if [ $width -ge $height ]; then
 		orientation='landscape'
-		if [ ! -f $post/$filename_s ]; then
-			convert -geometry 588x $filename $post/$filename_s &
-		fi
+		width_s='588x'
 	else
 		orientation='portrait'
-		if [ ! -f $post/$filename_s ]; then
-			convert -geometry 288x $filename $post/$filename_s &
-		fi
+		width_s='288x'
+	fi
+
+	# jpeg画像固有のオプションをつける判定
+	if echo $filename | grep -e '\.\(jpeg\|jpg\)$'; then
+		jpeg_option="-define jpeg:size=$width_s"
+	fi
+
+	if [ ! -f $post/$filename_s ]; then
+		# なぜか$jpeg_optionが一旦変数展開してからevalしないとunrecognized opitonとされる
+		eval "convert -strip $jpeg_option -resize $width_s $filename $post/$filename_s" &
 	fi
 
 	# 連続して画像タグがある場合に、pタグをまとめる
