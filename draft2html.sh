@@ -59,28 +59,10 @@ for label in $(echo "$labels"); do
 done
 labels_string=$(echo $labels_string | sed 's/,$//')
 
-cat << HEADER > $tmp
-<article>
-<aside class="clearfix">
-<div class="social-icon">
-  <a href="http://twitter.com/share?url=\${SITE_URL}post/$post&text=$title_encoded\$SITE_TITLE_TAIL_ENCODED"><span class="icon-twitter"></span></a>
-  <a href="http://www.facebook.com/sharer.php?u=\${SITE_URL}post/$post"><span class="icon-facebook"></span></a>
-  <a href="https://plusone.google.com/_/+1/confirm?hl=ja&url=\${SITE_URL}post/$post"><span class="icon-googleplus"</span></a>
-</div>
-<div class="date">
-  <time>$formatted_date</time>
-</div>
-<div class="labels">
-  $labels_string
-</div>
-</aside>
-<h2><a href="\${SITE_URL}post/$post">$title</a></h2>
-HEADER
+sentence=$(cat $draft | sed '1,4d' | tr -d '\r')
 
 # htmlタグに対応するための一時ファイル
-cat $draft |
-sed '1,4d' |
-tr -d '\r' >> $tmp
+. ./template-article.html > $tmp
 
 # スペースを含んだメッセージに対応するため、スペース区切りを無効化
 IFS_BACKUP=$IFS
@@ -215,10 +197,6 @@ else
 		-e 's/^$/<br>/g' \
 		-e 's/^\([^<| *].*\)/<p>\1<\/p>/g' $tmp
 fi
-
-cat << FOOTER >> $tmp
-</article>
-FOOTER
 
 # ヒアドキュメントでテンプレート化
 sed -i -e '1icat << EOF' -e '$aEOF' $tmp
