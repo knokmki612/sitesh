@@ -5,9 +5,15 @@ if [ $# -ne 1 ]; then
 	exit 1
 fi
 
-cd $(dirname $1)
 draft=$(basename $1)
 tmp=$(mktemp)
+cd $(dirname $1)
+
+if [ "$draft" = 'draft' ]; then
+	before_post=$(basename $(pwd))
+	draft="$before_post/$draft"
+	cd ../
+fi
 
 raw_date=$(echo $draft | cut -d '-' -f 1)
 formatted_date=$(echo $raw_date | cut -c 1-8 | date -f - +%Y/%m/%d) || exit 1
@@ -78,7 +84,7 @@ while true; do
 
 	linenum=$(echo $image | cut -d ':' -f 1)
 
-	if echo $image | grep -E ':https?://[^:]*'; then
+	if echo $image | grep -qE ':https?://[^:]*'; then
 		filename=$(
 			echo $image | cut -d ':' -f 2-3)
 		alt=$(
@@ -134,7 +140,7 @@ while true; do
 	fi
 
 	# jpeg画像固有のオプションをつける判定
-	if echo $filename | grep -e '\.\(jpeg\|jpg\)$'; then
+	if echo $filename | grep -qe '\.\(jpeg\|jpg\)$'; then
 		jpeg_option="-define jpeg:size=$width_s"
 	fi
 
@@ -201,11 +207,12 @@ fi
 # ヒアドキュメントでテンプレート化
 sed -i -e '1icat << EOF' -e '$aEOF' $tmp
 
-cd $post
-echo $title > title
-echo "$labels" > label
-cat ../$draft > draft
-cat $tmp > html
+echo $title > $post/title
+echo "$labels" > $post/label
+cp $tmp $post/html
+if [ ! "$draft" = "$post/draft" ]; then
+	cp $draft $post/draft
+fi
 rm $tmp
 
 wait
