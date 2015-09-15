@@ -43,14 +43,14 @@ permalink=$(
 	cut -d ':' -f 2 |
 	sed -e 's/^ *//g')
 
-if [ "$permalink" = "" ]; then
+if [ "$permalink" = '' ]; then
 	echo "$draft: Please set permalink at start from alphanumeric character."
 	exit 1
 fi
 
 post="$raw_date-$permalink"
 
-if [ ! -d $post ]; then
+if [ ! -d "$post" ]; then
 	mkdir $post
 fi
 
@@ -82,7 +82,13 @@ while true; do
 		break
 	fi
 
-	linenum=$(echo $image | cut -d ':' -f 1)
+	filename=$(
+		echo $image | cut -d ':' -f 2)
+	alt=$(
+		echo $image | cut -d ':' -f 3 | sed -e 's/^ *//g')
+	linenum=$(
+		echo $image | cut -d ':' -f 1)
+	filename_url="\$SITE_URL\${SITE_POSTS_DIR}$post/$filename"
 
 	if echo $image | grep -qE ':https?://[^:]*'; then
 		filename=$(
@@ -92,41 +98,41 @@ while true; do
 
 		filename_url="$filename"
 		filename=$(basename $filename)
+		filepath="$post/$filename"
 
 		# 既にローカルにファイルがあったら取ってこない
-		if [ -f $filename ]; then
+		if [ -f "$filepath" ]; then
 			wget --spider $filename_url || exit 1
 		else
-			wget $filename_url || exit 1
+			wget $filename_url -O $filepath || exit 1
 		fi
 
-	elif [ -f $filename ]; then
-		filename=$(
-			echo $image | cut -d ':' -f 2)
-		alt=$(
-			echo $image | cut -d ':' -f 3 | sed -e 's/^ *//g')
-
-		filename_url="\$SITE_URL\${SITE_POSTS_DIR}$post/$filename"
+	elif [ -f "$filename" ]; then
+		filepath="$filename"
+	elif [ -f "$post/$filename" ]; then
+		filepath="$post/$filename"
+	elif [ -n "$before_post" ] && [ -f "$before_post/$filename" ]; then
+		filepath="$before_post/$filename"
 	else
-		echo "$filename: No such image in this directory."
+		echo "$filename: No such image in post directory and parent directory."
 		exit 1
 	fi
 
-	if [ ! -f $post/$filename ]; then
-		cp $filename $post/$filename &
+	if [ ! -f "$post/$filename" ]; then
+		cp $filepath $post/$filename &
 	fi
 
 	# 向き判定のついでに圧縮した画像を生成
 	filename_s=$(echo $filename | sed -e 's/\.\(png\|jpeg\|jpg\)/-s.jpg/')
 	filename_s_url="\$SITE_URL\${SITE_POSTS_DIR}$post/$filename_s"
 	width=$(
-		file $filename                 |
+		file $filepath                 |
 		grep -oE ", [0-9]+ ?x ?[0-9]+" |
 		grep -oE "[0-9]+"              |
 		head -n 1)
 
 	height=$(
-		file $filename                 |
+		file $filepath                 |
 		grep -oE ", [0-9]+ ?x ?[0-9]+" |
 		grep -oE "[0-9]+"              |
 		tail -n 1)
@@ -144,9 +150,9 @@ while true; do
 		jpeg_option="-define jpeg:size=$width_s"
 	fi
 
-	if [ ! -f $post/$filename_s ]; then
+	if [ ! -f "$post/$filename_s" ]; then
 		# なぜか$jpeg_optionが一旦変数展開してからevalしないとunrecognized opitonとされる
-		eval "convert -strip $jpeg_option -resize $width_s $filename $post/$filename_s" &
+		eval "convert -strip $jpeg_option -resize $width_s $filepath $post/$filename_s" &
 	fi
 
 	# 連続して画像タグがある場合に、pタグをまとめる
