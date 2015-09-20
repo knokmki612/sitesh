@@ -13,6 +13,8 @@ if [ "$draft" = 'draft' ]; then
 	before_post=$(basename $(pwd))
 	draft="$before_post/$draft"
 	cd ../
+else
+	nkf -w --overwrite $draft
 fi
 
 raw_date=$(echo $draft | cut -d '-' -f 1)
@@ -68,7 +70,7 @@ labels_string=$(echo $labels_string | sed 's/,$//')
 sentence=$(cat $draft | sed '1,4d' | tr -d '\r')
 
 # htmlタグに対応するための一時ファイル
-. ./template-article.html > $tmp
+. $(dirname $0)/template-article.html > $tmp
 
 # スペースを含んだメッセージに対応するため、スペース区切りを無効化
 IFS_BACKUP=$IFS
@@ -222,5 +224,5 @@ fi
 rm $tmp
 
 wait
-find -regextype posix-egrep -regex ".*\.(png|jpg|jpeg)" | xargs --no-run-if-empty chmod 644
+find $post -regextype posix-egrep -regex ".*\.(png|jpg|jpeg)" | xargs --no-run-if-empty chmod 644
 exit 0
