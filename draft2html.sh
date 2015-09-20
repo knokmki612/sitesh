@@ -45,7 +45,8 @@ permalink=$(
 	cut -d ':' -f 2 |
 	sed -e 's/^ *//g')
 
-if [ "$permalink" = '' ]; then
+if [ "$permalink" = '' ] || \
+		echo "$permalink" | grep -sq '[^A-Za-z0-9-]'; then
 	echo "$draft: Please set permalink at start from alphanumeric character."
 	exit 1
 fi
