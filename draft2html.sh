@@ -14,64 +14,91 @@ if [ "$draft" = 'draft' ]; then
 	draft="$before_post/$draft"
 	cd ../
 else
+	# 初めて整形するファイルはとりあえずUTF-8に変換
 	nkf -w --overwrite $draft
 fi
 
-raw_date=$(echo $draft | cut -d '-' -f 1)
-formatted_date=$(echo $raw_date | cut -c 1-8 | date -f - +%Y/%m/%d) || exit 1
+if echo "$draft" | grep -sqE '^[0-9]{14}' ;then
+	raw_date=$(echo $draft | sed 's/[./].*$//' | cut -d '-' -f 1)
+	formatted_date=$(echo $raw_date | cut -c 1-8 | date -f - +%Y/%m/%d) || exit 1
 
-title=$(
-	cat $draft      |
-	head -n 1       |
-	cut -d ':' -f 2 |
-	sed -e 's/^ *//g')
-title_encoded=$(
-	echo "$title" |
-	nkf -WwMQ     |
-	sed 's/=$//'  |
-	tr -d '\n'    |
-	tr = %)
-labels=$(
-	cat $draft        |
-	head -n 2         |
-	tail -n 1         |
-	cut -d ':' -f 2   |
-	sed -e 's/^ *//g' |
-	tr , '\n')
-permalink=$(
-	cat $draft      |
-	head -n 3       |
-	tail -n 1       |
-	cut -d ':' -f 2 |
-	sed -e 's/^ *//g')
+	title=$(
+		cat $draft      |
+		head -n 1       |
+		cut -d ':' -f 2 |
+		sed -e 's/^ *//g')
+	title_encoded=$(
+		echo "$title" |
+		nkf -WwMQ     |
+		sed 's/=$//'  |
+		tr -d '\n'    |
+		tr = %)
+	labels=$(
+		cat $draft        |
+		head -n 2         |
+		tail -n 1         |
+		cut -d ':' -f 2   |
+		sed -e 's/^ *//g' |
+		tr , '\n')
+	permalink=$(
+		cat $draft      |
+		head -n 3       |
+		tail -n 1       |
+		cut -d ':' -f 2 |
+		sed -e 's/^ *//g')
 
-if [ "$permalink" = '' ] || \
-		echo "$permalink" | grep -sq '[^A-Za-z0-9-]'; then
-	echo "$draft: Please set permalink at start from alphanumeric character."
-	exit 1
+	if [ "$permalink" = '' ]; then
+		post="$raw_date"
+	elif echo "$permalink" | grep -sq '[^A-Za-z0-9-]'; then
+		echo "$draft: Please set permalink at start from alphanumeric character."
+		exit 1
+	else
+		post="$raw_date-$permalink"
+	fi
+
+	if [ ! -d "$post" ]; then
+		mkdir $post
+	fi
+	echo "$labels" > $post/label
+
+	for label in $(echo "$labels"); do
+		label_encoded=$(
+		echo $label  |
+		nkf -WwMQ    |
+		sed 's/=$//' |
+		tr -d '\n'   |
+		tr = %)
+		labels_string=$labels_string$(echo "<a href=\"$SITE_URL?label=$label_encoded\">$label</a>,")
+	done
+	labels_string=$(echo $labels_string | sed 's/,$//')
+
+	sentence=$(cat $draft | sed '1,4d' | tr -d '\r')
+
+	# htmlタグに対応するための一時ファイル
+	. $(dirname $0)/template-article.html.sh > $tmp
+else
+	# 記事以外の固定ページの作成
+	title=$(
+		cat $draft      |
+		head -n 1       |
+		cut -d ':' -f 2 |
+		sed -e 's/^ *//g')
+
+	post=$(echo "$draft" | sed 's/[./].*$//')
+
+	if [ ! -d "$post" ]; then
+		mkdir $post
+	fi
+
+	sentence=$(cat $draft | sed '1,2d' | tr -d '\r')
+
+	# htmlタグに対応するための一時ファイル
+	cat <<- EOL > $tmp
+	<article>
+	$sentence
+	</article>
+	EOL
 fi
-
-post="$raw_date-$permalink"
-
-if [ ! -d "$post" ]; then
-	mkdir $post
-fi
-
-for label in $(echo "$labels"); do
-	label_encoded=$(
-	echo $label  |
-	nkf -WwMQ    |
-	sed 's/=$//' |
-	tr -d '\n'   |
-	tr = %)
-	labels_string=$labels_string$(echo '<a href="$SITE_URL?label='$label_encoded'">'$label'</a>',)
-done
-labels_string=$(echo $labels_string | sed 's/,$//')
-
-sentence=$(cat $draft | sed '1,4d' | tr -d '\r')
-
-# htmlタグに対応するための一時ファイル
-. $(dirname $0)/template-article.html > $tmp
 
 # スペースを含んだメッセージに対応するため、スペース区切りを無効化
 IFS_BACKUP=$IFS
@@ -217,7 +244,6 @@ fi
 sed -i -e '1icat << EOF' -e '$aEOF' $tmp
 
 echo $title > $post/title
-echo "$labels" > $post/label
 cp $tmp $post/html
 if [ ! "$draft" = "$post/draft" ]; then
 	cp $draft $post/draft
@@ -225,5 +251,5 @@ fi
 rm $tmp
 
 wait
-find $post -regextype posix-egrep -regex ".*\.(png|jpg|jpeg)" | xargs --no-run-if-empty chmod 644
+find $post -type f | xargs chmod 644
 exit 0
