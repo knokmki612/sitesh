@@ -7,7 +7,7 @@ cat << EOF
   <a href="https://plusone.google.com/_/+1/confirm?hl=ja&url=\${SITE_URL}post/$post"><span class="icon-">google+</span></a>
 </div>
 <div class="date">
-  <time>$formatted_date</time>
+  <time datetime="$datetime">$formatted_date</time>
 </div>
 <div class="labels">
   $labels_string

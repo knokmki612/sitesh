@@ -1,7 +1,7 @@
 #!/bin/dash
 
 if [ $# -ne 1 ]; then
-	echo 'usage: draft2html [$(date +%Y%m%d)-draft]'
+	echo 'usage: draft2html [$(date +%Y%m%d).draft]'
 	exit 1
 fi
 
@@ -13,14 +13,18 @@ if [ "$draft" = 'draft' ]; then
 	before_post=$(basename $(pwd))
 	draft="$before_post/$draft"
 	cd ../
-else
+elif echo "$draft" | grep -e '\.draft$'; then
 	# 初めて整形するファイルはとりあえずUTF-8に変換
 	nkf -w --overwrite $draft
+else
+	echo 'usage: draft2html [$(date +%Y%m%d).draft]'
+	exit 1
 fi
 
 if echo "$draft" | grep -sqE '^[0-9]{14}' ;then
 	raw_date=$(echo $draft | sed 's/[./].*$//' | cut -d '-' -f 1)
 	formatted_date=$(echo $raw_date | cut -c 1-8 | date -f - +%Y/%m/%d) || exit 1
+	datetime=$(echo $raw_date | cut -c 1-12 | sed 's/\(.\{8\}\)/\1 /' | date -f - +%Y-%m-%dT%H:%M%:z) || exit 1
 
 	title=$(
 		cat $draft      |
@@ -239,6 +243,9 @@ else
 		-e 's/^$/<br>/g' \
 		-e 's/^\([^<| *].*\)/<p>\1<\/p>/g' $tmp
 fi
+
+# 文字参照に置き換え
+sed -i 's/&/&amp;/g' $tmp
 
 # ヒアドキュメントでテンプレート化
 sed -i -e '1icat << EOF' -e '$aEOF' $tmp
