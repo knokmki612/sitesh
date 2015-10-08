@@ -12,7 +12,7 @@ if [ "$draft" = 'draft' ]; then
 	before_post=$(basename $(pwd))
 	draft="$before_post/$draft"
 	cd ../
-elif echo "$draft" | grep -e '\.draft$'; then
+elif echo "$draft" | grep -sqe '\.draft$'; then
 	# 初めて整形するファイルはとりあえずUTF-8に変換
 	nkf -w --overwrite $draft
 else
@@ -238,15 +238,13 @@ if echo "$html" | grep -sq -e '<pre\([^<]*>\)'; then
 		end=$(($end - 1))
 
 		if [ $start -lt $end ]; then
-			html=$(echo "$html" | sed \
-				-e $start,$end's/&/\&amp;/g' \
-				-e $start,$end's/</\&lt;/g' \
-				-e $start,$end's/>/\&gt;/g')
+			sed_option="$sed_option -e \"${start},${end}s/&/\&amp;/g\""
+			sed_option="$sed_option -e \"${start},${end}s/</\&lt;/g\""
+			sed_option="$sed_option -e \"${start},${end}s/>/\&gt;/g\""
 		else
-			html=$(echo "$html" | sed \
-				-e $start's/&/\&amp;/g' \
-				-e $start's/</\&lt;/g' \
-				-e $start's/>/\&gt;/g')
+			sed_option="$sed_option -e \"${start}s/&/\&amp;/g\""
+			sed_option="$sed_option -e \"${start}s/</\&lt;/g\""
+			sed_option="$sed_option -e \"${start}s/>/\&gt;/g\""
 		fi
 	done
 
@@ -266,17 +264,16 @@ $(($(
 		end=$(($end - 1))
 
 		if [ $start -lt $end ]; then
-			html=$(echo "$html" | sed \
-				-e $start,$end's/^$/<br>/g' \
-				-e $start,$end's/^\([^<| *].*\)/<p>\1<\/p>/g' \
-				-e $start,$end's/&/\&amp;/g')
+			sed_option="$sed_option -e \"${start},${end}s/^$/<br>/g\""
+			sed_option="$sed_option -e \"${start},${end}s/^\([^<| *].*\)/<p>\1<\/p>/g\""
+			sed_option="$sed_option -e \"${start},${end}s/&/\&amp;/g\""
 		else
-			html=$(echo "$html" | sed \
-				-e $start's/^$/<br>/g' \
-				-e $start's/^\([^<| *].*\)/<p>\1<\/p>/g' \
-				-e $start's/&/\&amp;/g')
+			sed_option="$sed_option -e \"${start}s/^$/<br>/g\""
+			sed_option="$sed_option -e \"${start}s/^\([^<| *].*\)/<p>\1<\/p>/g\""
+			sed_option="$sed_option -e \"${start}s/&/\&amp;/g\""
 		fi
 	done
+	html=$(echo "$html" | eval "sed $sed_option")
 else
 	html=$(echo "$html" | sed \
 		-e 's/^$/<br>/g' \
