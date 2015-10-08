@@ -6,7 +6,6 @@ if [ $# -ne 1 ]; then
 fi
 
 draft=$(basename $1)
-tmp=$(mktemp)
 cd $(dirname $1)
 
 if [ "$draft" = 'draft' ]; then
@@ -21,10 +20,20 @@ else
 	exit 1
 fi
 
-if echo "$draft" | grep -sqE '^[0-9]{14}' ;then
-	raw_date=$(echo $draft | sed 's/[./].*$//' | cut -d '-' -f 1)
-	formatted_date=$(echo $raw_date | cut -c 1-8 | date -f - +%Y/%m/%d) || exit 1
-	datetime=$(echo $raw_date | cut -c 1-12 | sed 's/\(.\{8\}\)/\1 /' | date -f - +%Y-%m-%dT%H:%M%:z) || exit 1
+if echo "$draft" | grep -sqE '^[0-9]{14}-' ;then
+	raw_date=$(
+		echo $draft       |
+		sed 's/[./].*$//' |
+		cut -d '-' -f 1)
+	formatted_date=$(
+		echo $raw_date |
+		cut -c 1-8     |
+		date -f - +%Y/%m/%d) || exit 1
+	datetime=$(
+		echo $raw_date          |
+		cut -c 1-12             |
+		sed 's/\(.\{8\}\)/\1 /' |
+		date -f - +%Y-%m-%dT%H:%M%:z) || exit 1
 
 	title=$(
 		cat $draft      |
@@ -79,7 +88,7 @@ if echo "$draft" | grep -sqE '^[0-9]{14}' ;then
 	sentence=$(cat $draft | sed '1,4d' | tr -d '\r')
 
 	# htmlタグに対応するための一時ファイル
-	. $(dirname $0)/template-article.html.sh > $tmp
+	html=$(. $(dirname $0)/template-article.html.sh)
 else
 	# 記事以外の固定ページの作成
 	title=$(
@@ -97,11 +106,12 @@ else
 	sentence=$(cat $draft | sed '1,2d' | tr -d '\r')
 
 	# htmlタグに対応するための一時ファイル
-	cat <<- EOL > $tmp
-	<article>
-	$sentence
-	</article>
-	EOL
+	html=$(cat <<- EOL
+		<article>
+		$sentence
+		</article>
+		EOL
+	)
 fi
 
 # スペースを含んだメッセージに対応するため、スペース区切りを無効化
@@ -110,7 +120,7 @@ IFS='
 '
 # 上から順番に画像タグを検出
 while true; do
-	image=$(grep -n -m 1 -e '.*\.\(png\|jpeg\|jpg\):' $tmp)
+	image=$(echo "$html" |  grep -n -m 1 -e '.*\.\(png\|jpeg\|jpg\):')
 
 	if [ $? -ne 0 ]; then
 		break
@@ -191,35 +201,63 @@ while true; do
 
 	# 連続して画像タグがある場合に、pタグをまとめる
 	if \
-		cat $tmp                  |
+		echo "$html"              |
 		head -n $(($linenum - 2)) |
 		tail -n 1                 |
 		grep -sq -e '<img class="\(landscape\|portrait\)"'; then
-		sed -i \
+		html=$(echo "$html" | sed \
 			-e $(($linenum - 1))'d' \
 			-e $linenum'a<\/p>' \
-			-e $linenum"c<a href=\"$filename_url\"><img class=\"$orientation\" src=\"$filename_s_url\" alt=\"$alt\"><\/a>" $tmp
+			-e $linenum"c<a href=\"$filename_url\"><img class=\"$orientation\" src=\"$filename_s_url\" alt=\"$alt\"><\/a>")
 	else
-		sed -i \
+		html=$(echo "$html" | sed \
 			-e $linenum'i<p class="image">' \
 			-e $linenum'a<\/p>' \
-			-e $linenum"c<a href=\"$filename_url\"><img class=\"$orientation\" src=\"$filename_s_url\" alt=\"$alt\"><\/a>" $tmp
+			-e $linenum"c<a href=\"$filename_url\"><img class=\"$orientation\" src=\"$filename_s_url\" alt=\"$alt\"><\/a>")
 	fi
 done
 
 IFS=$IFS_BACKUP
 
 # brタグ、pタグを入れる
+# 文字参照に置き換え
 # preタグに含まれる行をスキップする
-if grep -sq -e '<pre\([^<]*>\)' $tmp; then
-	start_pre=$(mktemp)
-	end_pre=$(mktemp)
+if echo "$html" | grep -sq -e '<pre\([^<]*>\)'; then
+
+	pre=$(
+		echo "$html"                   |
+		grep -n -e '</\?pre\([^<]*>\)' |
+		cut -d ':' -f 1)
+
+	pre_range=$(echo "$pre" | paste -d ',' - -)
 	
-	echo 0 > $end_pre
-	grep -n -e '<pre\([^<]*>\)' $tmp | cut -d ':' -f 1 > $start_pre
-	grep -n -e '</pre\([^<]*>\)' $tmp | cut -d ':' -f 1 >> $end_pre
-	echo $(($(wc -l $tmp | cut -d ' ' -f 1) + 1)) >> $start_pre
-	pre_range=$(paste -d ',' $end_pre $start_pre)
+	for range in $(echo "$pre_range"); do
+		start=$(echo $range | cut -d ',' -f 1)
+		start=$(($start + 1))
+		end=$(echo $range | cut -d ',' -f 2)
+		end=$(($end - 1))
+
+		if [ $start -lt $end ]; then
+			html=$(echo "$html" | sed \
+				-e $start,$end's/&/\&amp;/g' \
+				-e $start,$end's/</\&lt;/g' \
+				-e $start,$end's/>/\&gt;/g')
+		else
+			html=$(echo "$html" | sed \
+				-e $start's/&/\&amp;/g' \
+				-e $start's/</\&lt;/g' \
+				-e $start's/>/\&gt;/g')
+		fi
+	done
+
+	pre="0
+$pre
+$(($(
+		echo "$html" |
+		wc -l        |
+		cut -d ' ' -f 1) + 1))"
+
+	pre_range=$(echo "$pre" | paste -d ',' - -)
 
 	for range in $(echo "$pre_range"); do
 		start=$(echo $range | cut -d ',' -f 1)
@@ -228,35 +266,34 @@ if grep -sq -e '<pre\([^<]*>\)' $tmp; then
 		end=$(($end - 1))
 
 		if [ $start -lt $end ]; then
-			sed -i \
+			html=$(echo "$html" | sed \
 				-e $start,$end's/^$/<br>/g' \
-				-e $start,$end's/^\([^<| *].*\)/<p>\1<\/p>/g' $tmp
+				-e $start,$end's/^\([^<| *].*\)/<p>\1<\/p>/g' \
+				-e $start,$end's/&/\&amp;/g')
 		else
-			sed -i \
+			html=$(echo "$html" | sed \
 				-e $start's/^$/<br>/g' \
-				-e $start's/^\([^<| *].*\)/<p>\1<\/p>/g' $tmp
+				-e $start's/^\([^<| *].*\)/<p>\1<\/p>/g' \
+				-e $start's/&/\&amp;/g')
 		fi
 	done
-	rm $start_pre $end_pre
 else
-	sed -i \
+	html=$(echo "$html" | sed \
 		-e 's/^$/<br>/g' \
-		-e 's/^\([^<| *].*\)/<p>\1<\/p>/g' $tmp
+		-e 's/^\([^<| *].*\)/<p>\1<\/p>/g' \
+		-e 's/&/\&amp;/g')
 fi
 
-# 文字参照に置き換え
-sed -i 's/&/&amp;/g' $tmp
-
 # ヒアドキュメントでテンプレート化
-sed -i -e '1icat << EOF' -e '$aEOF' $tmp
+html=$(echo "$html" | sed -e '1icat << EOF' -e '$aEOF')
 
 echo $title > $post/title
-cp $tmp $post/html
+echo "$html" > $post/html
 if [ ! "$draft" = "$post/draft" ]; then
 	cp $draft $post/draft
 fi
-rm $tmp
 
 wait
 find $post -type f | xargs chmod 644
+
 exit 0
