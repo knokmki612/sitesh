@@ -81,14 +81,11 @@ if echo "$draft" | grep -sqE '^[0-9]{14}-' ;then
 		sed 's/=$//' |
 		tr -d '\n'   |
 		tr = %)
-		labels_string=$labels_string$(echo "<a href=\"$SITE_URL?label=$label_encoded\">$label</a>,")
+		labels_string="$labels_string<a href=\"$SITE_URL?label=$label_encoded\">$label</a>,"
 	done
 	labels_string=$(echo $labels_string | sed 's/,$//')
 
 	sentence=$(cat $draft | sed '1,4d' | tr -d '\r')
-
-	# htmlタグに対応するための一時ファイル
-	html=$(. $(dirname $0)/template-article.html.sh)
 else
 	# 記事以外の固定ページの作成
 	title=$(
@@ -104,14 +101,6 @@ else
 	fi
 
 	sentence=$(cat $draft | sed '1,2d' | tr -d '\r')
-
-	# htmlタグに対応するための一時ファイル
-	html=$(cat <<- EOL
-		<article>
-		$sentence
-		</article>
-		EOL
-	)
 fi
 
 # スペースを含んだメッセージに対応するため、スペース区切りを無効化
@@ -120,7 +109,7 @@ IFS='
 '
 # 上から順番に画像タグを検出
 while true; do
-	image=$(echo "$html" |  grep -n -m 1 -e '.*\.\(png\|jpeg\|jpg\):')
+	image=$(echo "$sentence" |  grep -n -m 1 -e '.*\.\(png\|jpeg\|jpg\):')
 
 	if [ $? -ne 0 ]; then
 		break
@@ -201,16 +190,16 @@ while true; do
 
 	# 連続して画像タグがある場合に、pタグをまとめる
 	if \
-		echo "$html"              |
+		echo "$sentence"          |
 		head -n $(($linenum - 2)) |
 		tail -n 1                 |
 		grep -sq -e '<img class="\(landscape\|portrait\)"'; then
-		html=$(echo "$html" | sed \
+		sentence=$(echo "$sentence" | sed \
 			-e $(($linenum - 1))'d' \
 			-e $linenum'a<\/p>' \
 			-e $linenum"c<a href=\"$filename_url\"><img class=\"$orientation\" src=\"$filename_s_url\" alt=\"$alt\"><\/a>")
 	else
-		html=$(echo "$html" | sed \
+		sentence=$(echo "$sentence" | sed \
 			-e $linenum'i<p class="image">' \
 			-e $linenum'a<\/p>' \
 			-e $linenum"c<a href=\"$filename_url\"><img class=\"$orientation\" src=\"$filename_s_url\" alt=\"$alt\"><\/a>")
@@ -222,12 +211,12 @@ IFS=$IFS_BACKUP
 # brタグ、pタグを入れる
 # 文字参照に置き換え
 # preタグに含まれる行をスキップする
-if echo "$html" | grep -sq -e '<pre\([^<]*>\)'; then
+if echo "$sentence" | grep -sq -e '<pre\([^<]*>\)'; then
+	sed_option="-e \"s/\\\\$/\\\\\\\\$/g\""
 
-	pre=$(
-		echo "$html"                   |
-		grep -n -e '</\?pre\([^<]*>\)' |
-		cut -d ':' -f 1)
+	pre="$(echo "$sentence" | grep -n -e '<pre\([^<]*>\)')
+$(echo "$sentence" | grep -n -e '</pre\([^<]*>\)')"
+	pre=$(echo "$pre" | cut -d ':' -f 1 | sort -n)
 
 	pre_range=$(echo "$pre" | paste -d ',' - -)
 	
@@ -237,22 +226,18 @@ if echo "$html" | grep -sq -e '<pre\([^<]*>\)'; then
 		end=$(echo $range | cut -d ',' -f 2)
 		end=$(($end - 1))
 
-		if [ $start -lt $end ]; then
+		if [ $start -le $end ]; then
 			sed_option="$sed_option -e \"${start},${end}s/&/\&amp;/g\""
 			sed_option="$sed_option -e \"${start},${end}s/</\&lt;/g\""
 			sed_option="$sed_option -e \"${start},${end}s/>/\&gt;/g\""
-		else
-			sed_option="$sed_option -e \"${start}s/&/\&amp;/g\""
-			sed_option="$sed_option -e \"${start}s/</\&lt;/g\""
-			sed_option="$sed_option -e \"${start}s/>/\&gt;/g\""
 		fi
 	done
 
 	pre="0
 $pre
 $(($(
-		echo "$html" |
-		wc -l        |
+		echo "$sentence" |
+		wc -l            |
 		cut -d ' ' -f 1) + 1))"
 
 	pre_range=$(echo "$pre" | paste -d ',' - -)
@@ -263,22 +248,31 @@ $(($(
 		end=$(echo $range | cut -d ',' -f 2)
 		end=$(($end - 1))
 
-		if [ $start -lt $end ]; then
+		if [ $start -le $end ]; then
 			sed_option="$sed_option -e \"${start},${end}s/^$/<br>/g\""
 			sed_option="$sed_option -e \"${start},${end}s/^\([^<| *].*\)/<p>\1<\/p>/g\""
 			sed_option="$sed_option -e \"${start},${end}s/&/\&amp;/g\""
-		else
-			sed_option="$sed_option -e \"${start}s/^$/<br>/g\""
-			sed_option="$sed_option -e \"${start}s/^\([^<| *].*\)/<p>\1<\/p>/g\""
-			sed_option="$sed_option -e \"${start}s/&/\&amp;/g\""
 		fi
 	done
-	html=$(echo "$html" | eval "sed $sed_option")
+
+	sentence=$(echo "$sentence" | eval "sed $sed_option")
 else
-	html=$(echo "$html" | sed \
+	sentence=$(echo "$sentence" | sed \
+		-e 's/\$/\\$/g' \
 		-e 's/^$/<br>/g' \
 		-e 's/^\([^<| *].*\)/<p>\1<\/p>/g' \
 		-e 's/&/\&amp;/g')
+fi
+
+if echo "$draft" | grep -sqE '^[0-9]{14}-' ;then
+	html=$(. $(dirname $0)/template-article.html.sh)
+else
+	html=$(cat <<- EOL
+		<article>
+		$sentence
+		</article>
+		EOL
+	)
 fi
 
 # ヒアドキュメントでテンプレート化
