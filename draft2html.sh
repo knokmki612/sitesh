@@ -1,7 +1,7 @@
 #!/bin/dash
 
 if [ $# -ne 1 ]; then
-	echo 'usage: draft2html [$(date +%Y%m%d).draft]'
+	echo 'usage: draft2html [$(date +%Y%m%d%H%M%S).draft]'
 	exit 1
 fi
 
@@ -16,7 +16,7 @@ elif echo "$draft" | grep -sqe '\.draft$'; then
 	# 初めて整形するファイルはとりあえずUTF-8に変換
 	nkf -w --overwrite $draft
 else
-	echo 'usage: draft2html [$(date +%Y%m%d).draft]'
+	echo 'usage: draft2html [$(date +%Y%m%d%H%M%S).draft]'
 	exit 1
 fi
 
