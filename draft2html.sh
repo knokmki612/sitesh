@@ -72,7 +72,7 @@ if echo "$draft" | grep -sqE '^[0-9]{14}-' ;then
 	if [ ! -d "$post" ]; then
 		mkdir $post
 	fi
-	echo "$labels" > $post/label
+	echo "$labels" | diff $post/label - || echo "$labels" > $post/label &
 
 	for label in $(echo "$labels"); do
 		label_encoded=$(
@@ -278,10 +278,10 @@ fi
 # ヒアドキュメントでテンプレート化
 html=$(echo "$html" | sed -e '1icat << EOF' -e '$aEOF')
 
-echo $title > $post/title
-echo "$html" > $post/html
+echo "$title" | diff $post/title - || echo "$title" > $post/title &
+echo "$html" | diff $post/html - || echo "$html" > $post/html &
 if [ ! "$draft" = "$post/draft" ]; then
-	cp $draft $post/draft
+	cp $draft $post/draft &
 fi
 
 wait
