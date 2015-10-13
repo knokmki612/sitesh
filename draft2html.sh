@@ -217,6 +217,23 @@ IFS=$IFS_BACKUP
 # 文字参照に置き換え
 # preタグに含まれる行をスキップする
 if echo "$sentence" | grep -sq -e '<pre\([^<]*>\)'; then
+	entity_enc() {
+		echo "$sentence"   |
+		sed -n \
+			-e "${1}s/\(<[^<>]\+>\)/\n\1\n/g" \
+			-e "${1}p"       |
+		sed \
+			-e '/<[^<>]\+>/p' \
+			-e '/<[^<>]\+>/d' \
+			-e 's/&/\&amp;/g' \
+			-e 's/</\&lt;/g' \
+			-e 's/>/\&gt;/g' \
+			-e 's/"/\&quot;/g' \
+			-e 's/&amp;\(lt;\|gt;\|quot;\)/\&\1/g' \
+			-e 's/\$/\\$/g' \
+			-e 's/`/\\`/g'   |
+			tr -d '\n'
+	}
 
 	pre="$(echo "$sentence" | grep -n -e '<pre\([^<]*>\)')
 $(echo "$sentence" | grep -n -e '</pre\([^<]*>\)')"
@@ -226,14 +243,24 @@ $(echo "$sentence" | grep -n -e '</pre\([^<]*>\)')"
 	
 	for range in $(echo "$pre_range"); do
 		start=$(echo $range | cut -d ',' -f 1)
-		start=$(($start + 1))
 		end=$(echo $range | cut -d ',' -f 2)
+
+		if [ $start -eq $end ]; then
+			sed_option="$sed_option -e \"${start}c$(entity_enc $start)\""
+		else
+			sed_option="$sed_option -e \"${start}c$(entity_enc $start)\""
+			sed_option="$sed_option -e \"${end}c$(entity_enc $end)\""
+		fi
+
+		start=$(($start + 1))
 		end=$(($end - 1))
 
 		if [ $start -le $end ]; then
 			sed_option="$sed_option -e \"${start},${end}s/&/\&amp;/g\""
 			sed_option="$sed_option -e \"${start},${end}s/</\&lt;/g\""
 			sed_option="$sed_option -e \"${start},${end}s/>/\&gt;/g\""
+			sed_option="$sed_option -e \"${start},${end}s/\\\"/\&quot;/g\""
+			sed_option="$sed_option -e \"${start},${end}s/&amp;\(lt;\|gt;\|quot;\)/\&\1/g\""
 			sed_option="$sed_option -e \"${start},${end}s/\\\\$/\\\\\\\\$/g\""
 			sed_option="$sed_option -e \"${start},${end}s/\\\`/\\\\\\\\\\\`/g\""
 		fi
@@ -250,17 +277,20 @@ $(($(
 
 	for range in $(echo "$pre_range"); do
 		start=$(echo $range | cut -d ',' -f 1)
-		start=$(($start + 1))
 		end=$(echo $range | cut -d ',' -f 2)
+
+		start=$(($start + 1))
 		end=$(($end - 1))
 
 		if [ $start -le $end ]; then
 			sed_option="$sed_option -e \"${start},${end}s/^$/<br>/g\""
 			sed_option="$sed_option -e \"${start},${end}s/^\([^<| *].*\)/<p>\1<\/p>/g\""
 			sed_option="$sed_option -e \"${start},${end}s/&/\&amp;/g\""
+			sed_option="$sed_option -e \"${start},${end}s/&amp;\(lt;\|gt;\|quot;\)/\&\1/g\""
 		fi
 	done
 
+#	echo $sed_option
 	sentence=$(echo "$sentence" | eval "sed $sed_option")
 else
 	sentence=$(echo "$sentence" | sed \
