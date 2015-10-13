@@ -5,6 +5,11 @@ if [ $# -ne 1 ]; then
 	exit 1
 fi
 
+if [ ! -f "$1" ]; then
+	echo 'no such file.'
+	exit 1
+fi
+
 draft=$(basename $1)
 cd $(dirname $1)
 
