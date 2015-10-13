@@ -81,7 +81,7 @@ if echo "$draft" | grep -sqE '^[0-9]{14}-' ;then
 		sed 's/=$//' |
 		tr -d '\n'   |
 		tr = %)
-		labels_string="$labels_string<a href=\"$SITE_URL?label=$label_encoded\">$label</a>,"
+		labels_string="$labels_string<a href=\"\$SITE_URL?label=$label_encoded\">$label</a>,"
 	done
 	labels_string=$(echo $labels_string | sed 's/,$//')
 
@@ -212,7 +212,6 @@ IFS=$IFS_BACKUP
 # 文字参照に置き換え
 # preタグに含まれる行をスキップする
 if echo "$sentence" | grep -sq -e '<pre\([^<]*>\)'; then
-	sed_option="-e \"s/\\\\$/\\\\\\\\$/g\""
 
 	pre="$(echo "$sentence" | grep -n -e '<pre\([^<]*>\)')
 $(echo "$sentence" | grep -n -e '</pre\([^<]*>\)')"
@@ -230,6 +229,8 @@ $(echo "$sentence" | grep -n -e '</pre\([^<]*>\)')"
 			sed_option="$sed_option -e \"${start},${end}s/&/\&amp;/g\""
 			sed_option="$sed_option -e \"${start},${end}s/</\&lt;/g\""
 			sed_option="$sed_option -e \"${start},${end}s/>/\&gt;/g\""
+			sed_option="$sed_option -e \"${start},${end}s/\\\\$/\\\\\\\\$/g\""
+			sed_option="$sed_option -e \"${start},${end}s/\\\`/\\\\\\\\\\\`/g\""
 		fi
 	done
 
@@ -258,7 +259,6 @@ $(($(
 	sentence=$(echo "$sentence" | eval "sed $sed_option")
 else
 	sentence=$(echo "$sentence" | sed \
-		-e 's/\$/\\$/g' \
 		-e 's/^$/<br>/g' \
 		-e 's/^\([^<| *].*\)/<p>\1<\/p>/g' \
 		-e 's/&/\&amp;/g')
