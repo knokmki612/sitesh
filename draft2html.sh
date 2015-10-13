@@ -20,7 +20,7 @@ else
 	exit 1
 fi
 
-if echo "$draft" | grep -sqE '^[0-9]{14}-' ;then
+if echo "$draft" | grep -sqE '^[0-9]{14}' ;then
 	raw_date=$(
 		echo $draft       |
 		sed 's/[./].*$//' |
@@ -264,7 +264,7 @@ else
 		-e 's/&/\&amp;/g')
 fi
 
-if echo "$draft" | grep -sqE '^[0-9]{14}-' ;then
+if echo "$draft" | grep -sqE '^[0-9]{14}' ;then
 	html=$(. $(dirname $0)/template-article.html.sh)
 else
 	html=$(cat <<- EOL
