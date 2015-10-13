@@ -39,6 +39,12 @@ if echo "$draft" | grep -sqE '^[0-9]{14}' ;then
 		cut -c 1-12             |
 		sed 's/\(.\{8\}\)/\1 /' |
 		date -f - +%Y-%m-%dT%H:%M%:z) || exit 1
+	pubdate=$(
+		echo $raw_date            |
+		sed \
+			-e 's/\(.\{2\}\)\(.\{2\}\)\(.\{2\}\)$/\1:\2:\3/g'  \
+			-e 's/^\(.\{8\}\)/\1 /' |
+		date -Rf - ) || exit 1
 
 	title=$(
 		cat $draft      |
@@ -301,6 +307,19 @@ fi
 
 if echo "$draft" | grep -sqE '^[0-9]{14}' ;then
 	html=$(. $(dirname $0)/template-article.html.sh)
+	rss=$(cat <<- EOL
+	cat << EOF
+	  <item>
+	    <title>$title</title>
+	    <link>\${SITE_URL}post/$post</link>
+	    <guid>\${SITE_URL}post/$post</guid>
+	    <pubDate>$pubdate</pubDate>
+	    <description><![CDATA[$sentence]]></description>
+	  </item>
+	EOF
+	EOL
+	)
+	echo "$rss" | diff  $post/rss - > /dev/null 2>&1 || echo "$rss" > $post/rss &
 else
 	html=$(cat <<- EOL
 		<article>
@@ -312,6 +331,7 @@ fi
 
 # ヒアドキュメントでテンプレート化
 html=$(echo "$html" | sed -e '1icat << EOF' -e '$aEOF')
+
 
 echo "$title" | diff  $post/title - > /dev/null 2>&1 || echo "$title" > $post/title &
 echo "$html" | diff  $post/html - > /dev/null 2>&1 || echo "$html" > $post/html &
