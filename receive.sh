@@ -12,7 +12,7 @@ read select_num
 select_num=$(echo $select_num | sed 's/\([^ ]*\)/-e \1p/g')
 echo ""
 
-echo "$list" | sed -n $select_num | xargs -I @ scp -r $SITE_DOMAIN:$SITE_ABSOLUTE_PATH${SITE_POSTS_DIR}@ $(pwd)
+echo "$list" | sed -n $select_num | xargs -I @ scp -rp $SITE_DOMAIN:$SITE_ABSOLUTE_PATH${SITE_POSTS_DIR}@ $(pwd)
 
 echo ""
 eval $(ssh-agent -k)
