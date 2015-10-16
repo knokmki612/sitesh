@@ -1,13 +1,18 @@
 #!/bin/sh
 . ~/site.conf
-echo ""
 
 list=$(
-	ls -U $(pwd)                |
-	find -maxdepth 2 -name html |
-	cut -d '/' -f 2             |
+	ls -U $(pwd)                            |
+	find -mindepth 1 -maxdepth 2 -name html |
+	cut -d '/' -f 2                         |
 	sort -nr)
 
+if [ -z "$list" ]; then
+	echo 'no such article in this directory.'
+	exit 1
+fi
+
+echo ""
 echo "$list" | nl
 while true; do
 	echo ""
