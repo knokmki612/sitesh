@@ -1,4 +1,4 @@
-#!/bin/dash
+#!/bin/sh
 if ! echo "$1" | grep -sqE '[0-9]{14}'; then
 	echo 'usage: update-date.sh $(date +%Y%m%d)'
 	exit 1

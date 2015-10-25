@@ -1,4 +1,4 @@
-#!/bin/dash
+#!/bin/sh
 
 if [ $# -ne 1 ]; then
 	echo 'usage: draft2html [$(date +%Y%m%d%H%M%S).draft]'
