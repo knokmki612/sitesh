@@ -17,7 +17,7 @@ if [ "$draft" = 'draft' ]; then
 	before_post=$(basename $(pwd))
 	draft="$before_post/$draft"
 	cd ../
-elif echo "$draft" | grep -sqe '\.draft$'; then
+elif echo "$draft" | grep -sq '\.draft$'; then
 	# 初めて整形するファイルはとりあえずUTF-8に変換
 	nkf -w --overwrite $draft
 else
@@ -120,7 +120,7 @@ IFS='
 '
 # 上から順番に画像タグを検出
 while true; do
-	image=$(echo "$sentence" |  grep -n -m 1 -e '.*\.\(png\|jpeg\|jpg\):')
+	image=$(echo "$sentence" |  grep -n -m 1 '.*\.\(png\|jpeg\|jpg\):')
 
 	if [ $? -ne 0 ]; then
 		break
@@ -190,7 +190,7 @@ while true; do
 	fi
 
 	# jpeg画像固有のオプションをつける判定
-	if echo $filename | grep -qe '\.\(jpeg\|jpg\)$'; then
+	if echo $filename | grep -sq '\.\(jpeg\|jpg\)$'; then
 		jpeg_option="-define jpeg:size=$width_s"
 	fi
 
@@ -204,7 +204,7 @@ while true; do
 		echo "$sentence"          |
 		head -n $(($linenum - 2)) |
 		tail -n 1                 |
-		grep -sq -e '<img class="\(landscape\|portrait\)"'; then
+		grep -sq '<img class="\(landscape\|portrait\)"'; then
 		sentence=$(echo "$sentence" | $sed_exec \
 			-e $(($linenum - 1))'d' \
 			-e $linenum'a<\/p>' \
@@ -222,7 +222,7 @@ IFS=$IFS_BACKUP
 # brタグ、pタグを入れる
 # 文字参照に置き換え
 # preタグに含まれる行をスキップする
-if echo "$sentence" | grep -sq -e '<pre\([^<]*>\)'; then
+if echo "$sentence" | grep -sq '<pre\([^<]*>\)'; then
 	entity_enc() {
 		echo "$sentence"   |
 		$sed_exec -n \
@@ -241,8 +241,8 @@ if echo "$sentence" | grep -sq -e '<pre\([^<]*>\)'; then
 			tr -d '\n'
 	}
 
-	pre="$(echo "$sentence" | grep -n -e '<pre\([^<]*>\)')
-$(echo "$sentence" | grep -n -e '</pre\([^<]*>\)')"
+	pre="$(echo "$sentence" | grep -n '<pre\([^<]*>\)')
+$(echo "$sentence" | grep -n '</pre\([^<]*>\)')"
 	pre=$(echo "$pre" | cut -d ':' -f 1 | sort -n)
 
 	pre_range=$(echo "$pre" | paste -d ',' - -)
