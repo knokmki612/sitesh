@@ -8,6 +8,14 @@ while [ -n "$search_script" ]; do
 done
 EXECUTE_DIR=$(dirname $entity_script)
 
+# MacやBSDで実行する際にgdateやgsedを使う
+if uname -s | grep '\(BSD\|Darwin\)'; then
+	export sed_exec='gsed'
+	export date_exec='gdate'
+else
+	export sed_exec='sed'
+	export date_exec='date'
+fi
 
 while [ $# -gt 0 ]; do
 	case $1 in

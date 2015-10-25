@@ -27,49 +27,49 @@ fi
 
 if echo "$draft" | grep -sqE '^[0-9]{14}' ;then
 	raw_date=$(
-		echo $draft       |
-		sed 's/[./].*$//' |
+		echo $draft             |
+		$sed_exec 's/[./].*$//' |
 		cut -d '-' -f 1)
 	formatted_date=$(
 		echo $raw_date |
 		cut -c 1-8     |
-		date -f - +%Y/%m/%d) || exit 1
+		$date_exec -f - +%Y/%m/%d) || exit 1
 	datetime=$(
-		echo $raw_date          |
-		cut -c 1-12             |
-		sed 's/\(.\{8\}\)/\1 /' |
-		date -f - +%Y-%m-%dT%H:%M%:z) || exit 1
+		echo $raw_date                |
+		cut -c 1-12                   |
+		$sed_exec 's/\(.\{8\}\)/\1 /' |
+		$date_exec -f - +%Y-%m-%dT%H:%M%:z) || exit 1
 	pubdate=$(
 		echo $raw_date            |
-		sed \
+		$sed_exec \
 			-e 's/\(.\{2\}\)\(.\{2\}\)\(.\{2\}\)$/\1:\2:\3/g'  \
 			-e 's/^\(.\{8\}\)/\1 /' |
-		date -Rf - ) || exit 1
+		$date_exec -Rf - ) || exit 1
 
 	title=$(
 		cat $draft      |
 		head -n 1       |
 		cut -d ':' -f 2 |
-		sed -e 's/^ *//g')
+		$sed_exec -e 's/^ *//g')
 	title_encoded=$(
-		echo "$title" |
-		nkf -WwMQ     |
-		sed 's/=$//'  |
-		tr -d '\n'    |
+		echo "$title"       |
+		nkf -WwMQ           |
+		$sed_exec 's/=$//'  |
+		tr -d '\n'          |
 		tr = %)
 	labels=$(
-		cat $draft        |
-		head -n 2         |
-		tail -n 1         |
-		cut -d ':' -f 2   |
-		sed -e 's/^ *//g' |
+		cat $draft              |
+		head -n 2               |
+		tail -n 1               |
+		cut -d ':' -f 2         |
+		$sed_exec -e 's/^ *//g' |
 		tr , '\n')
 	permalink=$(
 		cat $draft      |
 		head -n 3       |
 		tail -n 1       |
 		cut -d ':' -f 2 |
-		sed -e 's/^ *//g')
+		$sed_exec -e 's/^ *//g')
 
 	if [ "$permalink" = '' ]; then
 		post="$raw_date"
@@ -87,31 +87,31 @@ if echo "$draft" | grep -sqE '^[0-9]{14}' ;then
 
 	for label in $(echo "$labels"); do
 		label_encoded=$(
-		echo $label  |
-		nkf -WwMQ    |
-		sed 's/=$//' |
-		tr -d '\n'   |
+		echo $label        |
+		nkf -WwMQ          |
+		$sed_exec 's/=$//' |
+		tr -d '\n'         |
 		tr = %)
 		labels_string="$labels_string<a href=\"\$SITE_URL?label=$label_encoded\">$label</a>,"
 	done
-	labels_string=$(echo $labels_string | sed 's/,$//')
+	labels_string=$(echo $labels_string | $sed_exec 's/,$//')
 
-	sentence=$(cat $draft | sed '1,4d' | tr -d '\r')
+	sentence=$(cat $draft | $sed_exec '1,4d' | tr -d '\r')
 else
 	# 記事以外の固定ページの作成
 	title=$(
 		cat $draft      |
 		head -n 1       |
 		cut -d ':' -f 2 |
-		sed -e 's/^ *//g')
+		$sed_exec -e 's/^ *//g')
 
-	post=$(echo "$draft" | sed 's/[./].*$//')
+	post=$(echo "$draft" | $sed_exec 's/[./].*$//')
 
 	if [ ! -d "$post" ]; then
 		mkdir $post
 	fi
 
-	sentence=$(cat $draft | sed '1,2d' | tr -d '\r')
+	sentence=$(cat $draft | $sed_exec '1,2d' | tr -d '\r')
 fi
 
 # スペースを含んだメッセージに対応するため、スペース区切りを無効化
@@ -129,7 +129,7 @@ while true; do
 	filename=$(
 		echo $image | cut -d ':' -f 2)
 	alt=$(
-		echo $image | cut -d ':' -f 3 | sed -e 's/^ *//g')
+		echo $image | cut -d ':' -f 3 | $sed_exec -e 's/^ *//g')
 	linenum=$(
 		echo $image | cut -d ':' -f 1)
 	filename_url="\$SITE_URL\${SITE_POSTS_DIR}$post/$filename"
@@ -138,7 +138,7 @@ while true; do
 		filename=$(
 			echo $image | cut -d ':' -f 2-3)
 		alt=$(
-			echo $image | cut -d ':' -f 4 | sed -e 's/^ *//g')
+			echo $image | cut -d ':' -f 4 | $sed_exec -e 's/^ *//g')
 
 		filename_url="$filename"
 		filename=$(basename $filename)
@@ -167,7 +167,7 @@ while true; do
 	fi
 
 	# 向き判定のついでに圧縮した画像を生成
-	filename_s=$(echo $filename | sed -e 's/\.\(png\|jpeg\|jpg\)/-s.jpg/')
+	filename_s=$(echo $filename | $sed_exec -e 's/\.\(png\|jpeg\|jpg\)/-s.jpg/')
 	filename_s_url="\$SITE_URL\${SITE_POSTS_DIR}$post/$filename_s"
 	width=$(
 		file $filepath                 |
@@ -205,12 +205,12 @@ while true; do
 		head -n $(($linenum - 2)) |
 		tail -n 1                 |
 		grep -sq -e '<img class="\(landscape\|portrait\)"'; then
-		sentence=$(echo "$sentence" | sed \
+		sentence=$(echo "$sentence" | $sed_exec \
 			-e $(($linenum - 1))'d' \
 			-e $linenum'a<\/p>' \
 			-e $linenum"c<a href=\"$filename_url\"><img class=\"$orientation\" src=\"$filename_s_url\" alt=\"$alt\"><\/a>")
 	else
-		sentence=$(echo "$sentence" | sed \
+		sentence=$(echo "$sentence" | $sed_exec \
 			-e $linenum'i<p class="image">' \
 			-e $linenum'a<\/p>' \
 			-e $linenum"c<a href=\"$filename_url\"><img class=\"$orientation\" src=\"$filename_s_url\" alt=\"$alt\"><\/a>")
@@ -225,10 +225,10 @@ IFS=$IFS_BACKUP
 if echo "$sentence" | grep -sq -e '<pre\([^<]*>\)'; then
 	entity_enc() {
 		echo "$sentence"   |
-		sed -n \
+		$sed_exec -n \
 			-e "${1}s/\(<[^<>]\+>\)/\n\1\n/g" \
 			-e "${1}p"       |
-		sed \
+		$sed_exec \
 			-e '/<[^<>]\+>/p' \
 			-e '/<[^<>]\+>/d' \
 			-e 's/&/\&amp;/g' \
@@ -297,9 +297,9 @@ $(($(
 	done
 
 #	echo $sed_option
-	sentence=$(echo "$sentence" | eval "sed $sed_option")
+	sentence=$(echo "$sentence" | eval "$sed_exec $sed_option")
 else
-	sentence=$(echo "$sentence" | sed \
+	sentence=$(echo "$sentence" | $sed_exec \
 		-e 's/^$/<br>/g' \
 		-e 's/^\([^<| *].*\)/<p>\1<\/p>/g' \
 		-e 's/&/\&amp;/g')
@@ -330,7 +330,7 @@ else
 fi
 
 # ヒアドキュメントでテンプレート化
-html=$(echo "$html" | sed -e '1icat << EOF' -e '$aEOF')
+html=$(echo "$html" | $sed_exec -e '1icat << EOF' -e '$aEOF')
 
 
 echo "$title" | diff  $post/title - > /dev/null 2>&1 || echo "$title" > $post/title &

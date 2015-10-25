@@ -10,7 +10,7 @@ if [ -n "$1" ]; then
 	Write from next line:
 	EOL
 else
-	cat <<- EOL > $(date +%Y%m%d%H%M%S).draft
+	cat <<- EOL > $($date_exec +%Y%m%d%H%M%S).draft
 	Title: 
 	Label: 
 	Permalink: 
