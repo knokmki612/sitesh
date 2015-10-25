@@ -1,6 +1,8 @@
 #!/bin/sh
 VERSION='0.0.1'
 
+. ~/site.conf
+
 search_script=$0
 while [ -n "$search_script" ]; do
 	entity_script=$search_script

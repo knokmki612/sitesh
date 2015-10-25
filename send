@@ -1,5 +1,4 @@
 #!/bin/sh
-. ~/site.conf
 
 list=$(
 	ls -U $(pwd)                            |
