@@ -296,7 +296,6 @@ $(($(
 		fi
 	done
 
-#	echo $sed_option
 	sentence=$(echo "$sentence" | eval "$sed_exec $sed_option")
 else
 	sentence=$(echo "$sentence" | $sed_exec \
