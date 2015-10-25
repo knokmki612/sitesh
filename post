@@ -8,8 +8,8 @@ while [ -n "$search_script" ]; do
 done
 EXECUTE_DIR=$(dirname $entity_script)
 
-# Mac¤äBSD¤Ç¼Â¹Ô¤¹¤ëºİ¤Ëgdate¤ägsed¤ò»È¤¦
-if uname -s | grep '\(BSD\|Darwin\)'; then
+# Macã‚„BSDã§å®Ÿè¡Œã™ã‚‹éš›ã«gdateã‚„gsedã‚’ä½¿ã†
+if uname -s | grep -sq '\(BSD\|Darwin\)'; then
 	export sed_exec='gsed'
 	export date_exec='gdate'
 else
