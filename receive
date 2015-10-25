@@ -10,7 +10,7 @@ echo "$list" | nl
 
 while true; do
 	echo ""
-	echo -n '(? for help, q for quit): '
+	env echo -n '(? for help, q for quit): '
 	read select_num
 	if echo $select_num | grep -sq '[0-9|,$]'; then
 		break
