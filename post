@@ -8,7 +8,7 @@ while [ -n "$search_script" ]; do
 	entity_script=$search_script
 	search_script=$(readlink $search_script)
 done
-EXECUTE_DIR=$(dirname $entity_script)
+export EXECUTE_DIR=$(dirname $entity_script)
 
 # MacやBSDで実行する際にgdateやgsedを使う
 if uname -s | grep -sq '\(BSD\|Darwin\)'; then
