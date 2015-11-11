@@ -18,20 +18,23 @@ generate_conf() {
 	read url
 	env echo -n 'server path: '
 	read path
+	env echo -n 'post dir: '
+	read postdir
 	cat <<- + > $1
 		export SITE_DOMAIN="$ssh"
 		export SITE_URL="$url"
 		export SITE_ABSOLUTE_PATH="$path"
+		export SITE_POSTS_DIR="$postdir"
 	+
 }
 
 list_conf() {
 	conf_number=1
 	list=$(
-		echo "number hostname url path"
+		echo "number hostname url path postdir"
 		while [ -f ${conf_number}.conf ]; do
 			. ./${conf_number}.conf
-			echo "$conf_number $SITE_DOMAIN $SITE_URL $SITE_ABSOLUTE_PATH"
+			echo "$conf_number $SITE_DOMAIN $SITE_URL $SITE_ABSOLUTE_PATH $SITE_POSTS_DIR"
 			conf_number=$(($conf_number + 1))
 		done)
 	if [ $(echo "$list" | wc -l) = 1 ]; then
@@ -95,11 +98,13 @@ remove() {
 	ssh=$SITE_DOMAIN
 	url=$SITE_URL
 	path=$SITE_ABSOLUTE_PATH
+	postdir=$SITE_POSTS_DIR
 	. ./site.conf
 	if \
 		[ $ssh = $SITE_DOMAIN ] && \
 		[ $url = $SITE_URL ] && \
-		[ $path = $SITE_ABSOLUTE_PATH ]; then
+		[ $path = $SITE_ABSOLUTE_PATH ] && \
+		[ $postdir = $SITE_POSTS_DIR ]; then
 		echo "this site is currently selected, abort"
 		exit 1
 	fi
