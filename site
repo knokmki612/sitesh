@@ -1,0 +1,141 @@
+#!/bin/sh
+VERSION='0.0.1'
+
+if [ ! -d ~/.site ]; then
+	mkdir ~/.site
+fi
+cd ~/.site
+
+current_conf() {
+	. ./site.conf
+	echo "current selected site: $SITE_URL"
+}
+
+generate_conf() {
+	env echo -n 'ssh: '
+	read ssh
+	env echo -n 'url: '
+	read url
+	env echo -n 'server path: '
+	read path
+	cat <<- + > $1
+		export SITE_DOMAIN="$ssh"
+		export SITE_URL="$url"
+		export SITE_ABSOLUTE_PATH="$path"
+	+
+}
+
+list_conf() {
+	conf_number=1
+	list=$(
+		echo "number hostname url path"
+		while [ -f ${conf_number}.conf ]; do
+			. ./${conf_number}.conf
+			echo "$conf_number $SITE_DOMAIN $SITE_URL $SITE_ABSOLUTE_PATH"
+			conf_number=$(($conf_number + 1))
+		done)
+	if [ $(echo "$list" | wc -l) = 1 ]; then
+		echo 'please configure any site'
+		exit 1
+	fi
+	echo "$list" | column -t
+}
+
+select_conf() {
+	list_conf
+	while true; do
+	env echo -n 'select num: '
+	read num
+		if [ $num = 'q' ]; then
+			exit 0
+		elif ! echo $num | grep -sqE '^[0-9]+$'; then
+			echo 'wrong number'
+		elif [ -f ${num}.conf ]; then
+			break
+		else
+			echo 'wrong number'
+		fi
+	done
+}
+
+new() {
+	new_number=1
+	while [ -f ${new_number}.conf ]; do
+		new_number=$(($new_number + 1))
+	done
+	new_conf=${new_number}.conf
+	generate_conf $new_conf
+	if [ ! -f site.conf ]; then
+		ln -s $new_conf site.conf
+	fi
+	current_conf
+}
+
+show() {
+	list_conf
+	echo ""
+	current_conf
+}
+
+update() {
+	select_conf
+	generate_conf ${num}.conf
+	current_conf
+}
+
+switch() {
+	select_conf
+	ln -sf ${num}.conf site.conf
+	current_conf
+}
+
+remove() {
+	select_conf
+	. ./${num}.conf
+	ssh=$SITE_DOMAIN
+	url=$SITE_URL
+	path=$SITE_ABSOLUTE_PATH
+	. ./site.conf
+	if \
+		[ $ssh = $SITE_DOMAIN ] && \
+		[ $url = $SITE_URL ] && \
+		[ $path = $SITE_ABSOLUTE_PATH ]; then
+		echo "this site is currently selected, abort"
+		exit 1
+	fi
+	while [ -f $(($num + 1)).conf ]; do
+		mv $(($num + 1)).conf ${num}.conf
+	done
+}
+
+while [ $# -gt 0 ]; do
+	case $1 in
+		version)
+			echo "version: $VERSION"
+			exit 0
+			;;
+		new)
+			new
+			exit 0
+			;;
+		show)
+			show
+			exit 0
+			;;
+		update)
+			update
+			exit 0
+			;;
+		switch)
+			switch
+			exit 0
+			;;
+		remove)
+			remove exit 0
+			;;
+		*)
+			exit 0
+			;;
+	esac
+	shift
+done
