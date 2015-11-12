@@ -18,7 +18,7 @@ generate_conf() {
 	read ssh
 	env echo -n 'server path: '
 	read path
-	env echo -n 'post dir: '
+	env echo -n "post dir: $path"
 	read postdir
 	cat <<- + > $1
 		export SITE_URL="$url"
