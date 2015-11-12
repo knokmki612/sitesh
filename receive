@@ -2,7 +2,7 @@
 
 eval $(ssh-agent)
 trap 'eval $(ssh-agent -k); exit 1' 1 2 3 15
-ssh-add ~/.ssh/id_rsa
+ssh-add $SITE_SSH_KEY
 echo ""
 
 list=$(ssh $SITE_DOMAIN "ls -U $SITE_ABSOLUTE_PATH$SITE_POSTS_DIR | sort -nr")
