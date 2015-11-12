@@ -8,6 +8,7 @@ cd ~/.site
 
 current_conf() {
 	. ./site.conf
+	echo ""
 	echo "current selected site: $SITE_URL"
 }
 
@@ -76,7 +77,6 @@ add() {
 
 show() {
 	list_conf
-	echo ""
 	current_conf
 }
 
