@@ -54,10 +54,10 @@ select_conf() {
 			exit 0
 		elif ! echo $num | grep -sqE '^[0-9]+$'; then
 			echo 'wrong number'
-		elif [ -f ${num}.conf ]; then
-			break
-		else
+		elif [ ! -f ${num}.conf ]; then
 			echo 'wrong number'
+		else
+			break
 		fi
 	done
 }
