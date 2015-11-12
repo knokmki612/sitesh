@@ -98,6 +98,11 @@ remove() {
 	while [ -f $(($num + 1)).conf ]; do
 		mv $(($num + 1)).conf ${num}.conf
 	done
+	rm site.conf
+	if [ -f 1.conf ]; then
+		echo ""
+		switch
+	fi
 }
 
 while [ $# -gt 0 ]; do
