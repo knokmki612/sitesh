@@ -33,13 +33,13 @@ generate_conf() {
 }
 
 list_conf() {
-	conf_number=1
+	number=1
 	list=$(
 		echo "number url hostname key path postdir"
-		while [ -f ${conf_number}.conf ]; do
-			. ./${conf_number}.conf
-			echo "$conf_number $SITE_URL $SITE_DOMAIN $SITE_SSH_KEY $SITE_ABSOLUTE_PATH $SITE_POSTS_DIR"
-			conf_number=$(($conf_number + 1))
+		while [ -f ${number}.conf ]; do
+			. ./${number}.conf
+			echo "$number $SITE_URL $SITE_DOMAIN $SITE_SSH_KEY $SITE_ABSOLUTE_PATH $SITE_POSTS_DIR"
+			number=$(($number + 1))
 		done)
 	if [ $(echo "$list" | wc -l) = 1 ]; then
 		echo 'please configure any site'
@@ -52,12 +52,12 @@ select_conf() {
 	list_conf
 	while true; do
 	env echo -n "select $1 site of number: "
-	read num
-		if [ $num = 'q' ]; then
+	read number
+		if [ $number = 'q' ]; then
 			exit 0
-		elif ! echo $num | grep -sqE '^[0-9]+$'; then
+		elif ! echo $number | grep -sqE '^[0-9]+$'; then
 			echo 'wrong number'
-		elif [ ! -f ${num}.conf ]; then
+		elif [ ! -f ${number}.conf ]; then
 			echo 'wrong number'
 		else
 			break
@@ -85,21 +85,21 @@ show() {
 
 edit() {
 	select_conf edit
-	generate_conf ${num}.conf
+	generate_conf ${number}.conf
 	current_conf
 }
 
 switch() {
 	select_conf switch
-	ln -sf ${num}.conf site.conf
+	ln -sf ${number}.conf site.conf
 	current_conf
 }
 
 remove() {
 	select_conf remove
-	rm ${num}.conf
-	while [ -f $(($num + 1)).conf ]; do
-		mv $(($num + 1)).conf ${num}.conf
+	rm ${number}.conf
+	while [ -f $(($number + 1)).conf ]; do
+		mv $(($number + 1)).conf ${number}.conf
 	done
 	rm site.conf
 	if [ -f 1.conf ]; then
@@ -131,7 +131,8 @@ while [ $# -gt 0 ]; do
 			exit 0
 			;;
 		remove)
-			remove exit 0
+			remove
+			exit 0
 			;;
 		*)
 			exit 0
