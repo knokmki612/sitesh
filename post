@@ -1,6 +1,10 @@
 #!/bin/sh
 VERSION='0.0.1'
 
+if [ ! -f ~/.site/site.conf ]; then
+	echo "can't found site.conf"
+	exit 1
+fi
 . ~/.site/site.conf
 
 search_script=$0
