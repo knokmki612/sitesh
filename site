@@ -47,7 +47,7 @@ list_conf() {
 select_conf() {
 	list_conf
 	while true; do
-	env echo -n 'select num: '
+	env echo -n "select $1 site of number: "
 	read num
 		if [ $num = 'q' ]; then
 			exit 0
@@ -61,7 +61,7 @@ select_conf() {
 	done
 }
 
-new() {
+add() {
 	new_number=1
 	while [ -f ${new_number}.conf ]; do
 		new_number=$(($new_number + 1))
@@ -80,34 +80,21 @@ show() {
 	current_conf
 }
 
-update() {
-	select_conf
+edit() {
+	select_conf edit
 	generate_conf ${num}.conf
 	current_conf
 }
 
 switch() {
-	select_conf
+	select_conf switch
 	ln -sf ${num}.conf site.conf
 	current_conf
 }
 
 remove() {
-	select_conf
-	. ./${num}.conf
-	ssh=$SITE_DOMAIN
-	url=$SITE_URL
-	path=$SITE_ABSOLUTE_PATH
-	postdir=$SITE_POSTS_DIR
-	. ./site.conf
-	if \
-		[ $ssh = $SITE_DOMAIN ] && \
-		[ $url = $SITE_URL ] && \
-		[ $path = $SITE_ABSOLUTE_PATH ] && \
-		[ $postdir = $SITE_POSTS_DIR ]; then
-		echo "this site is currently selected, abort"
-		exit 1
-	fi
+	select_conf remove
+	rm ${num}.conf
 	while [ -f $(($num + 1)).conf ]; do
 		mv $(($num + 1)).conf ${num}.conf
 	done
@@ -119,16 +106,16 @@ while [ $# -gt 0 ]; do
 			echo "version: $VERSION"
 			exit 0
 			;;
-		new)
-			new
+		add)
+			add
 			exit 0
 			;;
 		show)
 			show
 			exit 0
 			;;
-		update)
-			update
+		edit)
+			edit
 			exit 0
 			;;
 		switch)
