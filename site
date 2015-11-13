@@ -41,7 +41,7 @@ list_conf() {
 			echo "$number $SITE_URL $SITE_DOMAIN $SITE_SSH_KEY $SITE_ABSOLUTE_PATH $SITE_POSTS_DIR"
 			number=$(($number + 1))
 		done)
-	if [ $(echo "$list" | wc -l) = 1 ]; then
+	if [ $(echo "$list" | wc -l) -eq 1 ]; then
 		echo 'please configure any site'
 		exit 1
 	fi
@@ -76,6 +76,47 @@ add() {
 		ln -s $new_conf site.conf
 	fi
 	current_conf
+}
+
+make() {
+	select_conf make
+	. ./${number}.conf
+	echo ""
+	env echo -n "author: "
+	read author
+	env echo -n "name: "
+	read name
+	env echo -n "description: "
+	read description
+	eval $(ssh-agent)
+	trap 'eval $(ssh-agent -k); exit 1' 1 2 3 15
+	eval ssh-add $SITE_SSH_KEY
+	ssh -t $SITE_DOMAIN "
+		if [ ! -d $SITE_ABSOLUTE_PATH ]; then
+			sudo mkdir $SITE_ABSOLUTE_PATH
+			sudo chown \$USER:\$USER $SITE_ABSOLUTE_PATH
+		fi
+		if [ \$(find $SITE_ABSOLUTE_PATH | wc -l) -ne 1 ]; then
+			echo 'this directory is already used, abort'
+			exit 0
+		fi
+		cd $SITE_ABSOLUTE_PATH
+		cat <<- + > site.conf
+			export SITE_URL=\"$SITE_URL\"
+			export SITE_POSTS_DIR=\"$SITE_POSTS_DIR\"
+			export SITE_AUTHOR=\"$author\"
+			export SITE_NAME=\"$name\"
+			export SITE_DESCRIPTION=\"$description\"
+			export SITE_TITLE_TAIL=\" - \\\$SITE_NAME\"
+			export SITE_TITLE_TAIL_ENCODED=\\\$(
+			  echo \"\\\$SITE_TITLE_TAIL\" |
+			  nkf -WwMQ               |
+			  sed 's/=$//'            |
+			  tr -d '\n'              |
+			  tr = %)
+		+"
+#		rsync -auvz -e ssh ~/Documents/site-script/theme/ $SITE_DOMAIN:$SITE_ABSOLUTE_PATH
+		eval $(ssh-agent -k)
 }
 
 show() {
@@ -116,6 +157,10 @@ while [ $# -gt 0 ]; do
 			;;
 		add)
 			add
+			exit 0
+			;;
+		make)
+			make
 			exit 0
 			;;
 		show)
