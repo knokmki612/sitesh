@@ -94,13 +94,17 @@ make() {
 	trap 'eval $(ssh-agent -k); exit 1' 1 2 3 15
 	eval ssh-add $SITE_SSH_KEY
 	ssh -t $SITE_DOMAIN "
+		if ! type git > /dev/null 2>&1; then
+			echo 'required git, abort'
+			exit 1
+		fi
 		if [ ! -d $SITE_ABSOLUTE_PATH ]; then
 			sudo mkdir $SITE_ABSOLUTE_PATH
 			sudo chown \$USER:\$USER $SITE_ABSOLUTE_PATH
 		fi
 		if [ \$(find $SITE_ABSOLUTE_PATH | wc -l) -ne 1 ]; then
 			echo 'this directory is already used, abort'
-			exit 0
+			exit 1
 		fi
 		cd $SITE_ABSOLUTE_PATH
 		cat <<- + > site.conf
@@ -116,9 +120,26 @@ make() {
 			  sed 's/=$//'            |
 			  tr -d '\n'              |
 			  tr = %)
-		+"
+		+
+		exit 0"
+	if [ $? -ne 0 ]; then
+		exit 1
+	fi
 #		rsync -auvz -e ssh ~/Documents/site-script/theme/ $SITE_DOMAIN:$SITE_ABSOLUTE_PATH
-		eval $(ssh-agent -k)
+	ssh $SITE_DOMAIN "
+		cd $SITE_ABSOLUTE_PATH
+		if [ ! -f ~/.gitconfig ]; then
+			env echo 'git user name: '
+			read gitname
+			env echo 'git user email: '
+			read gitemail
+			git config --local user.name \"$gitname\"
+			git config --local user.email \"$gitemail\"
+		fi
+		git init
+		git add .
+		git commit -m \"skeleton site is opened\""
+	eval $(ssh-agent -k)
 }
 
 show() {
