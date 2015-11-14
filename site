@@ -74,7 +74,7 @@ add() {
 	generate_conf $new_conf
 	if [ ! -f site.conf ]; then
 		cat <<- + > site.conf
-			. ./$new_conf
+			. ~/.site/$new_conf
 		+
 	fi
 	current_conf
@@ -156,7 +156,7 @@ edit() {
 switch() {
 	select_conf switch
 	cat <<- + > site.conf
-		. ./${number}.conf
+		. ~/.site/${number}.conf
 	+
 	current_conf
 }
