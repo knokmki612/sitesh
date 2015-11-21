@@ -50,6 +50,7 @@ while [ $# -gt 0 ]; do
 			exit 0
 			;;
 		remove)
+			$EXECUTE_DIR/remove
 			exit 0
 			;;
 		preview)
