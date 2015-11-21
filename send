@@ -30,17 +30,30 @@ while true; do
 	fi
 done
 select_num=$(echo $select_num | $sed_exec 's/\([^ ]*\)/-e \1p/g')
+select_list=$(echo "$list" | $sed_exec -n $select_num)
 echo ""
 
 eval $(ssh-agent)
 trap 'eval $(ssh-agent -k); exit 1' 1 2 3 15
 eval ssh-add $SITE_SSH_KEY
-echo "$list" | $sed_exec -n $select_num | xargs -I @ rsync -auvz --delete -e ssh $(pwd)/@ $SITE_DOMAIN:$SITE_ABSOLUTE_PATH${SITE_POSTS_DIR}
+echo "$select_list" |
+xargs -I @ rsync -auvz --delete -e ssh \
+	$(pwd)/@ \
+	$SITE_DOMAIN:$SITE_ABSOLUTE_PATH${SITE_POSTS_DIR}
+
 ssh $SITE_DOMAIN "
 	cd $SITE_ABSOLUTE_PATH
 	./make_archives.dash
 	./make_labels.dash
-	./make_search_cache.dash"
+	./make_search_cache.dash
+	for post in \$(echo \""$select_list"\"); do
+		git add ${SITE_POSTS_DIR}/\$post
+		git commit -m \"\$post: deployed\"
+	done
+	git ls-remote origin --exit-code 1 > /dev/null 2>&1
+	if [ \"\$?\" -eq 0 ]; then
+		git push origin master
+	fi"
 eval $(ssh-agent -k)
 
 echo ""
