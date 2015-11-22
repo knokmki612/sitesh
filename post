@@ -16,6 +16,19 @@ else
 	export date_exec='date'
 fi
 
+usage() {
+	cat <<- +
+		usage: post version
+		            new [static-page-permalink]
+		            make dated-draft-file
+		            update draft-file
+		            send
+		            receive
+		            remove
+		            preview
+	+
+}
+
 new() {
 	if [ -f "$1.draft" ]; then
 		echo 'file already exists'
@@ -570,6 +583,7 @@ while [ $# -gt 0 ]; do
 			exit 0
 			;;
 		*)
+			usage
 			exit 0
 			;;
 	esac

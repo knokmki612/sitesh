@@ -6,6 +6,18 @@ if [ ! -d ~/.site ]; then
 fi
 cd ~/.site
 
+usage() {
+	cat <<- +
+		usage: site version
+		            add
+		            make
+		            show
+		            edit
+		            switch
+		            remove
+	+
+}
+
 current_conf() {
 	. ./site.conf
 	echo ""
@@ -205,6 +217,7 @@ while [ $# -gt 0 ]; do
 			exit 0
 			;;
 		*)
+			usage
 			exit 0
 			;;
 	esac
