@@ -24,17 +24,31 @@ current_conf() {
 	echo "current selected site: $SITE_URL"
 }
 
+input() {
+	while true; do
+		env echo -n "$1: $additional"
+		read $1
+		if eval $2; then
+			break
+		else
+			echo "$3"
+		fi
+	done
+}
+
 generate_conf() {
-	env echo -n 'url: '
-	read url
-	env echo -n 'ssh: '
-	read ssh
-	env echo -n 'key: '
-	read key
-	env echo -n 'server path: '
-	read path
-	env echo -n "post dir: $path"
-	read postdir
+	input url "echo \$url | grep -sq 'http\?://'" \
+		"please set url (http or https)"
+	input ssh "true"
+	input key "[ -f \$(eval echo \$key) ]" \
+		"please set corresponded ssh key"
+	input path "echo \$path | grep -sq '^/'" \
+		"please set absolute path for use in site"
+	path=$(echo $path | sed 's/\/\?$/\//')
+	additional=$path
+	input postdir "true"
+	postdir=$(echo $postdir | sed 's/\/\?$/\//')
+	unset additional
 	cat <<- + > $1
 		export SITE_URL="$url"
 		export SITE_DOMAIN="$ssh"
