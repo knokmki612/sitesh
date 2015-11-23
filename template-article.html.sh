@@ -1,4 +1,4 @@
-cat << EOF
+cat << +
 <article>
 <aside class="clearfix">
 <div class="social-icon">
@@ -16,4 +16,4 @@ cat << EOF
 <h2><a href="\${SITE_URL}post/$post">$title</a></h2>
 $sentence
 </article>
-EOF
++

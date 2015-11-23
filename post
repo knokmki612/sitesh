@@ -36,17 +36,17 @@ new() {
 	fi
 
 	if [ -n "$1" ]; then
-		cat <<- EOL > "$1.draft"
+		cat <<- + > "$1.draft"
 			Title:
 			Write from next line:
-		EOL
+		+
 	else
-		cat <<- EOL > $($date_exec +%Y%m%d%H%M%S).draft
+		cat <<- + > $($date_exec +%Y%m%d%H%M%S).draft
 			Title: 
 			Label: 
 			Permalink: 
 			Write from next line:
-		EOL
+		+
 	fi
 }
 
@@ -357,8 +357,8 @@ make() {
 
 	if echo "$draft" | grep -sqE '^[0-9]{14}' ;then
 		html=$(. $(dirname $0)/template-article.html.sh)
-		rss=$(cat <<- EOL
-		cat << EOF
+		rss=$(cat <<- +
+		cat << +
 			<item>
 				<title>$title</title>
 				<link>\${SITE_URL}post/$post</link>
@@ -366,21 +366,21 @@ make() {
 				<pubDate>$pubdate</pubDate>
 				<description><![CDATA[$sentence]]></description>
 			</item>
-		EOF
-		EOL
+		+
+		+
 		)
 		echo "$rss" | diff  $post/rss - > /dev/null 2>&1 || echo "$rss" > $post/rss &
 	else
-		html=$(cat <<- EOL
+		html=$(cat <<- +
 			<article>
 			$sentence
 			</article>
-			EOL
+			+
 		)
 	fi
 
 # ヒアドキュメントでテンプレート化
-	html=$(echo "$html" | $sed_exec -e '1icat << EOF' -e '$aEOF')
+	html=$(echo "$html" | $sed_exec -e '1icat << +' -e '$a+')
 
 
 	echo "$title" | diff  $post/title - > /dev/null 2>&1 || echo "$title" > $post/title &
@@ -431,10 +431,10 @@ send() {
 			break
 		elif [ "$select_num" = '?' ]; then
 			echo ""
-			cat <<- EOM
+			cat <<- +
 				example(single specification): 1 3 6 9
 				example(range specification): 2,5 10,$
-			EOM
+			+
 		elif [ "$select_num" = 'q' ]; then
 			exit 0
 		fi
@@ -486,10 +486,10 @@ receive() {
 			break
 		elif [ "$select_num" = '?' ]; then
 			echo ""
-			cat <<- EOM
+			cat <<- +
 				example(single specification): 1 3 6 9
 				example(range specification): 2,5 10,$
-			EOM
+			+
 		elif [ "$select_num" = 'q' ]; then
 			eval $(ssh-agent -k)
 			exit 0
@@ -521,10 +521,10 @@ remove() {
 			break
 		elif [ "$select_num" = '?' ]; then
 			echo ""
-			cat <<- EOM
+			cat <<- +
 				example(single specification): 1 3 6 9
 				example(range specification): 2,5 10,$
-			EOM
+			+
 		elif [ "$select_num" = 'q' ]; then
 			eval $(ssh-agent -k)
 			exit 0
