@@ -133,6 +133,7 @@ make() {
 			exit 1
 		fi
 		cd $SITE_ABSOLUTE_PATH
+		mkdir $SITE_POSTS_DIR
 		cat <<- + > site.conf
 			export SITE_URL=\"$SITE_URL\"
 			export SITE_POSTS_DIR=\"$SITE_POSTS_DIR\"
