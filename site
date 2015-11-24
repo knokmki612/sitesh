@@ -110,12 +110,9 @@ make() {
 	select_conf make
 	. ./${number}.conf
 	echo ""
-	env echo -n "author: "
-	read author
-	env echo -n "name: "
-	read name
-	env echo -n "description: "
-	read description
+	input author "true"
+	input name "true"
+	input description "true"
 	eval $(ssh-agent)
 	trap 'eval $(ssh-agent -k); exit 1' 1 2 3 15
 	eval ssh-add $SITE_SSH_KEY
