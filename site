@@ -61,10 +61,10 @@ generate_conf() {
 list_conf() {
 	number=1
 	list=$(
-		echo "number url hostname key path postdir"
+		echo "no. url hostname"
 		while [ -f ${number}.conf ]; do
 			. ./${number}.conf
-			echo "$number $SITE_URL $SITE_DOMAIN $SITE_SSH_KEY $SITE_ABSOLUTE_PATH $SITE_POSTS_DIR"
+			echo "$number $SITE_URL $SITE_DOMAIN"
 			number=$(($number + 1))
 		done)
 	if [ $(echo "$list" | wc -l) -eq 1 ]; then
@@ -167,7 +167,16 @@ make() {
 }
 
 show() {
-	list_conf
+	select_conf show
+	. ./${number}.conf
+	cat <<- +
+
+		url:           $SITE_URL
+		ssh host:      $SITE_DOMAIN
+		ssh key:       $SITE_SSH_KEY
+		absolute path: $SITE_ABSOLUTE_PATH
+		posts dir:     $SITE_POSTS_DIR
+	+
 	current_conf
 }
 
