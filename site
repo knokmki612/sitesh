@@ -25,30 +25,51 @@ current_conf() {
 }
 
 input() {
+	case $1 in
+		url)
+			input_msg="$1: "
+			condition="echo \$url | grep -sq 'http\?://'"
+			error_msg="please set url (http or https)"
+			;;
+		key)
+			input_msg="$1: "
+			condition="[ -f \$(eval echo \$key) ]"
+			error_msg="please set corresponded ssh key"
+			;;
+		path)
+			input_msg="$1: "
+			condition="echo \$path | grep -sq '^/'"
+			error_msg="please set absolute path for use in site"
+			;;
+		postdir)
+			input_msg="$1: $(eval echo $path)"
+			condition="true"
+			;;
+		*)
+			input_msg="$1: "
+			condition="true"
+			;;
+	esac
 	while true; do
-		env echo -n "$1: $additional"
+		env echo -n $input_msg
 		read $1
-		if eval $2; then
+		if eval $condition; then
 			break
 		else
-			echo "$3"
+			echo $error_msg
 		fi
 	done
+	if [ $1 = path ] || [ $1 = postdir ]; then
+		eval $1=$(eval echo \$$1 | sed 's/\/\?$/\//')
+	fi
 }
 
 generate_conf() {
-	input url "echo \$url | grep -sq 'http\?://'" \
-		"please set url (http or https)"
-	input ssh "true"
-	input key "[ -f \$(eval echo \$key) ]" \
-		"please set corresponded ssh key"
-	input path "echo \$path | grep -sq '^/'" \
-		"please set absolute path for use in site"
-	path=$(echo $path | sed 's/\/\?$/\//')
-	additional=$path
-	input postdir "true"
-	postdir=$(echo $postdir | sed 's/\/\?$/\//')
-	unset additional
+	input url
+	input ssh
+	input key
+	input path
+	input postdir
 	cat <<- + > $1
 		export SITE_URL="$url"
 		export SITE_DOMAIN="$ssh"
@@ -110,9 +131,9 @@ make() {
 	select_conf make
 	. ./${number}.conf
 	echo ""
-	input author "true"
-	input name "true"
-	input description "true"
+	input author
+	input name
+	input description
 	eval $(ssh-agent)
 	trap 'eval $(ssh-agent -k); exit 1' 1 2 3 15
 	eval ssh-add $SITE_SSH_KEY
