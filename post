@@ -453,9 +453,7 @@ send() {
 
 	ssh $SITE_DOMAIN "
 		cd $SITE_ABSOLUTE_PATH
-		./make_archives.dash
-		./make_labels.dash
-		./make_search_cache.dash
+		find jobs -maxdepth 1 -type f | xargs -I@ sh @
 		for post in \$(echo \""$select_list"\"); do
 			git add ${SITE_POSTS_DIR}\$post
 			git commit -m \"deployed: \$post\"
