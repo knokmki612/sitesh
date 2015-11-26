@@ -173,15 +173,15 @@ make() {
 #		rsync -auvz -e ssh ~/Documents/site-script/theme/ $SITE_DOMAIN:$SITE_ABSOLUTE_PATH
 	ssh $SITE_DOMAIN "
 		cd $SITE_ABSOLUTE_PATH
+		git init
 		if [ ! -f ~/.gitconfig ]; then
-			env echo 'git user name: '
+			env echo -n 'git user name: '
 			read gitname
-			env echo 'git user email: '
+			env echo -n 'git user email: '
 			read gitemail
 			git config --local user.name \"$gitname\"
 			git config --local user.email \"$gitemail\"
 		fi
-		git init
 		git add .
 		git commit -m \"skeleton site is opened\""
 	eval $(ssh-agent -k)
