@@ -1,5 +1,6 @@
 #!/bin/sh
 VERSION='0.0.1'
+exec_dir=$(cd $(dirname "$0") && pwd)
 
 if [ ! -f ~/.site/site.conf ]; then
 	echo "can't found site.conf"
@@ -356,7 +357,7 @@ make() {
 	fi
 
 	if echo "$draft" | grep -sqE '^[0-9]{14}' ;then
-		html=$(. $(dirname $0)/template-article.html.sh)
+		html=$(. $exec_dir/../share/site/templates/$SITE_TEMPLATE/template-article.html.sh)
 		rss=$(cat <<- +
 		cat << +
 			<item>
