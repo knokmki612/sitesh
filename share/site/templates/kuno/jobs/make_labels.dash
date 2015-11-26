@@ -1,0 +1,36 @@
+#!/bin/dash
+
+. ./site.conf
+
+labels=$(
+	find $SITE_POSTS_DIR -name label |
+	xargs cat                        |
+	LANG=ja_JP.UTF-8 sort -f         |
+	uniq -c                          |
+	sed 's/^ *//g'                   |
+	tr \  ,)
+
+cat << HEADER > labels
+cat << +
+<section>
+  <h2>Labels</h2>
+  <ul class="labels">
+HEADER
+
+for label in $labels; do
+	label_count=$(echo $label | cut -d ',' -f 1)
+	label_name=$(echo $label | cut -d ',' -f 2)
+	label_name_encoded=$(
+		echo $label_name  |
+		nkf -WwMQ         |
+		sed 's/=$//'      |
+		tr -d '\n'        |
+		tr = %)
+	echo "  <li><a href=\"\$SITE_URL?label=$label_name_encoded\">$label_name</a> ($label_count)</li>" >> labels
+done
+
+cat << FOOTER >> labels
+  </ul>
+</section>
++
+FOOTER

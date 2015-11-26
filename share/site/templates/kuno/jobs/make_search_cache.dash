@@ -1,0 +1,11 @@
+#!/bin/dash
+
+. ./site.conf
+
+find $SITE_POSTS_DIR -name draft |
+grep -E '[0-9]{14}'              |
+xargs grep "."                   |
+sed \
+	-e 's/\/draft:/:/' \
+	-e 's/<[^>]*>//g' \
+	-e '/.*:.*:/d' -e '/.*: *$/d' > ./search.cache

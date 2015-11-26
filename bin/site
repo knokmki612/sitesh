@@ -2,7 +2,7 @@
 VERSION='0.0.1'
 
 if [ ! -d ~/.site ]; then
-	mkdir ~/.site
+	mkdir -p ~/.site/templates
 fi
 cd ~/.site
 
