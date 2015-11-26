@@ -357,7 +357,15 @@ make() {
 	fi
 
 	if echo "$draft" | grep -sqE '^[0-9]{14}' ;then
-		html=$(. $exec_dir/../share/site/templates/$SITE_TEMPLATE/template-article.html.sh)
+		if [ -f "~/.site/templates/$SITE_TEMPLATE/template-article.html.sh" ]; then
+			template="~/.site/templates/$SITE_TEMPLATE/template-article.html.sh"
+		elif [ -f "$exec_dir/../share/site/templates/$SITE_TEMPLATE/template-article.html.sh" ]; then
+			template="$exec_dir/../share/site/templates/$SITE_TEMPLATE/template-article.html.sh"
+		else
+			echo 'template not found'
+			exit 1
+		fi
+		html=$(. $template)
 		rss=$(cat <<- +
 		cat << ++
 			<item>
