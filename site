@@ -179,8 +179,8 @@ make() {
 			read gitname
 			env echo -n 'git user email: '
 			read gitemail
-			git config --local user.name \"$gitname\"
-			git config --local user.email \"$gitemail\"
+			git config user.name \"$gitname\"
+			git config user.email \"$gitemail\"
 		fi
 		git add .
 		git commit -m \"skeleton site is opened\""
