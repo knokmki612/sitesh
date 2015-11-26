@@ -1,5 +1,6 @@
 #!/bin/sh
 VERSION='0.0.1'
+exec_dir=$(cd $(dirname "$0") && pwd)
 
 if [ ! -d ~/.site ]; then
 	mkdir -p ~/.site/templates
@@ -49,6 +50,11 @@ input() {
 			input_msg="posts dir: $(eval echo $SITE_ABSOLUTE_PATH)"
 			condition="true"
 			;;
+		SITE_TEMPLATE)
+			input_msg="template: "
+			condition="[ -d \$(eval echo $exec_dir/../share/site/templates/\$SITE_TEMPLATE) ] || [ -d \$(eval echo ~/.site/templates/\$SITE_TEMPLATE) ]"
+			error_msg="please choose available template"
+			;;
 		*)
 			input_msg="$1: "
 			condition="true"
@@ -78,6 +84,7 @@ generate_conf() {
 		input SITE_SSH_KEY
 		input SITE_ABSOLUTE_PATH
 		input SITE_POSTS_DIR
+		input SITE_TEMPLATE
 	fi
 	cat <<- + > $1
 		export SITE_URL="$SITE_URL"
@@ -85,6 +92,7 @@ generate_conf() {
 		export SITE_SSH_KEY="$SITE_SSH_KEY"
 		export SITE_ABSOLUTE_PATH="$SITE_ABSOLUTE_PATH"
 		export SITE_POSTS_DIR="$SITE_POSTS_DIR"
+		export SITE_TEMPLATE="$SITE_TEMPLATE"
 	+
 }
 
@@ -206,6 +214,7 @@ show() {
 		ssh key:,$SITE_SSH_KEY
 		server path:,$SITE_ABSOLUTE_PATH
 		posts dir:,$SITE_POSTS_DIR
+		template:,$SITE_TEMPLATE
 	+
 	current_conf
 }
@@ -221,6 +230,7 @@ edit() {
 			3,ssh key:,$SITE_SSH_KEY
 			4,server path:,$SITE_ABSOLUTE_PATH
 			5,posts dir:,$SITE_POSTS_DIR
+			6,template:,$SITE_TEMPLATE
 		+
 		env echo -en '\nselect element (q for quit): '
 		read element
@@ -239,6 +249,9 @@ edit() {
 				;;
 			5)
 				generate_conf ${number}.conf SITE_POSTS_DIR
+				;;
+			6)
+				generate_conf ${number}.conf SITE_TEMPLATE
 				;;
 			q)
 				exit 0
