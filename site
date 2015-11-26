@@ -55,7 +55,7 @@ input() {
 			;;
 	esac
 	while true; do
-		env echo -n $input_msg
+		env echo -n "$input_msg"
 		read $1
 		if eval $condition; then
 			break
