@@ -359,7 +359,7 @@ make() {
 	if echo "$draft" | grep -sqE '^[0-9]{14}' ;then
 		html=$(. $exec_dir/../share/site/templates/$SITE_TEMPLATE/template-article.html.sh)
 		rss=$(cat <<- +
-		cat << +
+		cat << ++
 			<item>
 				<title>$title</title>
 				<link>\${SITE_URL}post/$post</link>
@@ -367,7 +367,7 @@ make() {
 				<pubDate>$pubdate</pubDate>
 				<description><![CDATA[$sentence]]></description>
 			</item>
-		+
+		++
 		+
 		)
 		echo "$rss" | diff  $post/rss - > /dev/null 2>&1 || echo "$rss" > $post/rss &
