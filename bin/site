@@ -189,7 +189,15 @@ make() {
 	if [ $? -ne 0 ]; then
 		exit 1
 	fi
-#		rsync -auvz -e ssh ~/Documents/site-script/theme/ $SITE_DOMAIN:$SITE_ABSOLUTE_PATH
+	if [ -d "~/.site/templates/$SITE_TEMPLATE" ]; then
+		template="~/.site/templates/$SITE_TEMPLATE/"
+	elif [ -d "$exec_dir/../share/site/templates/$SITE_TEMPLATE" ]; then
+		template="$exec_dir/../share/site/templates/$SITE_TEMPLATE/"
+	else
+		echo 'template not found'
+		exit 1
+	fi
+	rsync -auvz -e ssh $template $SITE_DOMAIN:$SITE_ABSOLUTE_PATH
 	ssh $SITE_DOMAIN "
 		cd $SITE_ABSOLUTE_PATH
 		git init
