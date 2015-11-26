@@ -151,6 +151,7 @@ make() {
 	input author
 	input name
 	input description
+	apache_conf=$(. $exec_dir/../share/site/templates/apache-2.4.conf.example.sh)
 	eval $(ssh-agent)
 	trap 'eval $(ssh-agent -k); exit 1' 1 2 3 15
 	eval ssh-add $SITE_SSH_KEY
@@ -169,6 +170,7 @@ make() {
 		fi
 		cd $SITE_ABSOLUTE_PATH
 		mkdir $SITE_POSTS_DIR
+		echo \"$apache_conf\" > apache-2.4.conf.example
 		cat <<- + > site.conf
 			export SITE_URL=\"$SITE_URL\"
 			export SITE_POSTS_DIR=\"$SITE_POSTS_DIR\"
