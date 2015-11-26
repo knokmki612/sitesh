@@ -457,8 +457,8 @@ send() {
 		./make_labels.dash
 		./make_search_cache.dash
 		for post in \$(echo \""$select_list"\"); do
-			git add ${SITE_POSTS_DIR}/\$post
-			git commit -m \"\$post: deployed\"
+			git add ${SITE_POSTS_DIR}\$post
+			git commit -m \"deployed: \$post\"
 		done
 		git ls-remote origin --exit-code 1 > /dev/null 2>&1
 		if [ \"\$?\" -eq 0 ]; then
@@ -537,8 +537,8 @@ remove() {
 	ssh $SITE_DOMAIN "
 		cd $SITE_ABSOLUTE_PATH
 		for post in \$(echo \""$select_list"\"); do
-			git rm -r ${SITE_POSTS_DIR}/\$post
-			git commit -m \"\$post: deleted\"
+			git rm -r ${SITE_POSTS_DIR}\$post
+			git commit -m \"deleted: \$post\"
 		done
 		git ls-remote origin --exit-code 1 > /dev/null 2>&1
 		if [ \"\$?\" -eq 0 ]; then
