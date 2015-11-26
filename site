@@ -26,23 +26,27 @@ current_conf() {
 
 input() {
 	case $1 in
-		url)
-			input_msg="$1: "
-			condition="echo \$url | grep -sq 'http\?://'"
+		SITE_URL)
+			input_msg="url: "
+			condition="echo \$SITE_URL | grep -sq 'http\?://'"
 			error_msg="please set url (http or https)"
 			;;
-		key)
-			input_msg="$1: "
-			condition="[ -f \$(eval echo \$key) ]"
+		SITE_DOMAIN)
+			input_msg="ssh host: "
+			condition="true"
+			;;
+		SITE_SSH_KEY)
+			input_msg="ssh key: "
+			condition="[ -f \$(eval echo \$SITE_SSH_KEY) ]"
 			error_msg="please set corresponded ssh key"
 			;;
-		path)
-			input_msg="$1: "
-			condition="echo \$path | grep -sq '^/'"
+		SITE_ABSOLUTE_PATH)
+			input_msg="server path: "
+			condition="echo \$SITE_ABSOLUTE_PATH | grep -sq '^/'"
 			error_msg="please set absolute path for use in site"
 			;;
-		postdir)
-			input_msg="$1: $(eval echo $path)"
+		SITE_POSTS_DIR)
+			input_msg="posts dir: $(eval echo $SITE_ABSOLUTE_PATH)"
 			condition="true"
 			;;
 		*)
@@ -59,23 +63,28 @@ input() {
 			echo $error_msg
 		fi
 	done
-	if [ $1 = path ] || [ $1 = postdir ]; then
+	if [ $1 = SITE_URL ] || [ $1 = SITE_ABSOLUTE_PATH ] || [ $1 = SITE_POSTS_DIR ]; then
 		eval $1=$(eval echo \$$1 | sed 's/\/\?$/\//')
 	fi
 }
 
 generate_conf() {
-	input url
-	input ssh
-	input key
-	input path
-	input postdir
+	if [ -f $1 ]; then
+		. ./$1
+		input $2
+	else
+		input SITE_URL
+		input SITE_DOMAIN
+		input SITE_SSH_KEY
+		input SITE_ABSOLUTE_PATH
+		input SITE_POSTS_DIR
+	fi
 	cat <<- + > $1
-		export SITE_URL="$url"
-		export SITE_DOMAIN="$ssh"
-		export SITE_SSH_KEY="$key"
-		export SITE_ABSOLUTE_PATH="$path"
-		export SITE_POSTS_DIR="$postdir"
+		export SITE_URL="$SITE_URL"
+		export SITE_DOMAIN="$SITE_DOMAIN"
+		export SITE_SSH_KEY="$SITE_SSH_KEY"
+		export SITE_ABSOLUTE_PATH="$SITE_ABSOLUTE_PATH"
+		export SITE_POSTS_DIR="$SITE_POSTS_DIR"
 	+
 }
 
@@ -98,8 +107,8 @@ list_conf() {
 select_conf() {
 	list_conf
 	while true; do
-	env echo -n "select $1 site of number: "
-	read number
+		env echo -en "\nselect $1 site of number (q for quit): "
+		read number
 		if [ $number = 'q' ]; then
 			exit 0
 		elif ! echo $number | grep -sqE '^[0-9]+$'; then
@@ -190,20 +199,54 @@ make() {
 show() {
 	select_conf show
 	. ./${number}.conf
-	cat <<- +
-
-		url:           $SITE_URL
-		ssh host:      $SITE_DOMAIN
-		ssh key:       $SITE_SSH_KEY
-		absolute path: $SITE_ABSOLUTE_PATH
-		posts dir:     $SITE_POSTS_DIR
+	echo ""
+	cat <<- + | column -t -s ','
+		url:,$SITE_URL
+		ssh host:,$SITE_DOMAIN
+		ssh key:,$SITE_SSH_KEY
+		server path:,$SITE_ABSOLUTE_PATH
+		posts dir:,$SITE_POSTS_DIR
 	+
 	current_conf
 }
 
 edit() {
 	select_conf edit
-	generate_conf ${number}.conf
+	while true; do
+		. ./${number}.conf
+		echo ""
+		cat <<- + | column -t -s ','
+			1,url:,$SITE_URL
+			2,ssh host:,$SITE_DOMAIN
+			3,ssh key:,$SITE_SSH_KEY
+			4,server path:,$SITE_ABSOLUTE_PATH
+			5,posts dir:,$SITE_POSTS_DIR
+		+
+		env echo -en '\nselect element (q for quit): '
+		read element
+		case $element in
+			1)
+				generate_conf ${number}.conf SITE_URL
+				;;
+			2)
+				generate_conf ${number}.conf SITE_DOMAIN
+				;;
+			3)
+				generate_conf ${number}.conf SITE_SSH_KEY
+				;;
+			4)
+				generate_conf ${number}.conf SITE_ABSOLUTE_PATH
+				;;
+			5)
+				generate_conf ${number}.conf SITE_POSTS_DIR
+				;;
+			q)
+				exit 0
+				;;
+			*)
+				;;
+		esac
+	done
 	current_conf
 }
 
