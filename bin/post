@@ -547,6 +547,7 @@ remove() {
 			git rm -r ${POSTS}\$post
 			git commit -m \"removed: \$post\"
 		done
+		find jobs -maxdepth 1 -type f | xargs -I{} sh {}
 		git ls-remote origin --exit-code 1 > /dev/null 2>&1
 		if [ \"\$?\" -eq 0 ]; then
 			git push origin master
