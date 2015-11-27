@@ -15,7 +15,7 @@ archives=$(
 	sed 's/^ *//g' |
 	tr \  ,)
 
-cat << HEADER > archives
+cat << HEADER > cache/archives
 cat << +
 <section>
   <h2>Archives</h2>
@@ -29,13 +29,13 @@ for archive in $archives; do
 	year=$(echo $entry_date | cut -c 1-4)
 	month=$(echo $entry_date | cut -c 5-)
 	if [ -z "$month" ]; then
-		echo "  <option value=\"$entry_date\">${year}年 ($entry_count)</option>" >> archives
+		echo "  <option value=\"$entry_date\">${year}年 ($entry_count)</option>" >> cache/archives
 	else
-		echo "  <option value=\"$entry_date\">${year}年${month}月 ($entry_count)</option>" >> archives
+		echo "  <option value=\"$entry_date\">${year}年${month}月 ($entry_count)</option>" >> cache/archives
 	fi
 done
 
-cat << FOOTER >> archives
+cat << FOOTER >> cache/archives
   </select>
   <input class="archives" type="submit" value="»">
   </form>

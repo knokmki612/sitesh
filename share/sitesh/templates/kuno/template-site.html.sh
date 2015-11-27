@@ -59,7 +59,7 @@ $pager
 <div class="content-margin">
 <section>
   <h2>Feeds</h2>
-  <a class="rss-icon" href="${URL}rss/"><span class="icon-">rss</span></a>
+  <a class="rss-icon" href="${URL}?feeds"><span class="icon-">rss</span></a>
 </section>
 $labels
 $archives

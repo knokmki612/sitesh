@@ -2,8 +2,8 @@
 
 . ./site.conf
 
-archives=$(. ./archives)
-labels=$(. ./labels)
+archives=$(. ./cache/archives)
+labels=$(. ./cache/labels)
 
 echo 'Content-Type: text/html'
 echo ''
@@ -19,6 +19,10 @@ for query in $queries; do
 	request_param=$(echo $query | cut -d '=' -f 2)
 
 	case $request_key in
+		feeds)
+			article=$(. ./cache/choose)
+			title="購読 $TITLE_TAIL"
+		;;
 		post)
 			post=$(echo $request_param | sed 's;^;'$POSTS';g')
 			article=$(. ./$post/html)
@@ -134,11 +138,11 @@ for query in $queries; do
 						echo $request_param |
 						sed 's/ /\\|/g')
 					list=$(
-						grep -ie $request_param search.cache |
-						cut -d ':' -f 1                      |
-						uniq -c                              |
-						sort -nr                             |
-						sed -e 's/^ *//' -e 's/$/\/html/'    |
+						grep -ie $request_param /cache/search |
+						cut -d ':' -f 1                       |
+						uniq -c                               |
+						sort -nr                              |
+						sed -e 's/^ *//' -e 's/$/\/html/'     |
 						cut -d ' ' -f 2)
 					if [ -z $list ]; then
 						article="<p>""\"$request_param\"が含まれる記事はありませんでした。</p>"

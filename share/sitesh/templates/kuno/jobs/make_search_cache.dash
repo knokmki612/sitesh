@@ -8,4 +8,4 @@ xargs grep "."          |
 sed \
 	-e 's/\/draft:/:/' \
 	-e 's/<[^>]*>//g' \
-	-e '/.*:.*:/d' -e '/.*: *$/d' > ./search.cache
+	-e '/.*:.*:/d' -e '/.*: *$/d' > cache/search

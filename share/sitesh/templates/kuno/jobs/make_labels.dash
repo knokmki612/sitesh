@@ -10,7 +10,7 @@ labels=$(
 	sed 's/^ *//g'           |
 	tr \  ,)
 
-cat << HEADER > labels
+cat << HEADER > cache/labels
 cat << +
 <section>
   <h2>Labels</h2>
@@ -26,10 +26,10 @@ for label in $labels; do
 		sed 's/=$//'      |
 		tr -d '\n'        |
 		tr = %)
-	echo "  <li><a href=\"\$URL?label=$label_name_encoded\">$label_name</a> ($label_count)</li>" >> labels
+	echo "  <li><a href=\"\$URL?label=$label_name_encoded\">$label_name</a> ($label_count)</li>" >> cache/labels
 done
 
-cat << FOOTER >> labels
+cat << FOOTER >> cache/labels
   </ul>
 </section>
 +
