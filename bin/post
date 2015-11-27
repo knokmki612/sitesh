@@ -2,11 +2,11 @@
 VERSION='0.0.1'
 exec_dir=$(cd $(dirname "$0") && pwd)
 
-if [ ! -f ~/.site/site.conf ]; then
+if [ ! -f ~/.sitesh/site.conf ]; then
 	echo "can't found site.conf"
 	exit 1
 fi
-. ~/.site/site.conf
+. ~/.sitesh/site.conf
 
 # MacやBSDで実行する際にgdateやgsedを使う
 if uname -s | grep -sq '\(BSD\|Darwin\)'; then
@@ -357,10 +357,10 @@ make() {
 	fi
 
 	if echo "$draft" | grep -sqE '^[0-9]{14}' ;then
-		if [ -f "~/.site/templates/$SITE_TEMPLATE/template-article.html.sh" ]; then
-			template="~/.site/templates/$SITE_TEMPLATE/template-article.html.sh"
-		elif [ -f "$exec_dir/../share/site/templates/$SITE_TEMPLATE/template-article.html.sh" ]; then
-			template="$exec_dir/../share/site/templates/$SITE_TEMPLATE/template-article.html.sh"
+		if [ -f "~/.sitesh/templates/$SITE_TEMPLATE/template-article.html.sh" ]; then
+			template="~/.sitesh/templates/$SITE_TEMPLATE/template-article.html.sh"
+		elif [ -f "$exec_dir/../share/sitesh/templates/$SITE_TEMPLATE/template-article.html.sh" ]; then
+			template="$exec_dir/../share/sitesh/templates/$SITE_TEMPLATE/template-article.html.sh"
 		else
 			echo 'template not found'
 			exit 1

@@ -2,10 +2,10 @@
 VERSION='0.0.1'
 exec_dir=$(cd $(dirname "$0") && pwd)
 
-if [ ! -d ~/.site ]; then
-	mkdir -p ~/.site/templates
+if [ ! -d ~/.sitesh ]; then
+	mkdir -p ~/.sitesh/templates
 fi
-cd ~/.site
+cd ~/.sitesh
 
 usage() {
 	cat <<- +
@@ -52,7 +52,7 @@ input() {
 			;;
 		SITE_TEMPLATE)
 			input_msg="template: "
-			condition="[ -d \$(eval echo $exec_dir/../share/site/templates/\$SITE_TEMPLATE) ] || [ -d \$(eval echo ~/.site/templates/\$SITE_TEMPLATE) ]"
+			condition="[ -d \$(eval echo $exec_dir/../share/sitesh/templates/\$SITE_TEMPLATE) ] || [ -d \$(eval echo ~/.sitesh/templates/\$SITE_TEMPLATE) ]"
 			error_msg="please choose available template"
 			;;
 		*)
@@ -139,7 +139,7 @@ add() {
 	generate_conf $new_conf
 	if [ ! -f site.conf ]; then
 		cat <<- + > site.conf
-			. ~/.site/$new_conf
+			. ~/.sitesh/$new_conf
 		+
 	fi
 	current_conf
@@ -152,7 +152,7 @@ make() {
 	input author
 	input name
 	input description
-	apache_conf=$(. $exec_dir/../share/site/templates/apache-2.4.conf.example.sh)
+	apache_conf=$(. $exec_dir/../share/sitesh/templates/apache-2.4.conf.example.sh)
 	eval $(ssh-agent)
 	trap 'eval $(ssh-agent -k); exit 1' 1 2 3 15
 	eval ssh-add $SSH_KEY
@@ -190,10 +190,10 @@ make() {
 	if [ $? -ne 0 ]; then
 		exit 1
 	fi
-	if [ -d "~/.site/templates/$SITE_TEMPLATE" ]; then
-		template="~/.site/templates/$SITE_TEMPLATE/"
-	elif [ -d "$exec_dir/../share/site/templates/$SITE_TEMPLATE" ]; then
-		template="$exec_dir/../share/site/templates/$SITE_TEMPLATE/"
+	if [ -d "~/.sitesh/templates/$SITE_TEMPLATE" ]; then
+		template="~/.sitesh/templates/$SITE_TEMPLATE/"
+	elif [ -d "$exec_dir/../share/sitesh/templates/$SITE_TEMPLATE" ]; then
+		template="$exec_dir/../share/sitesh/templates/$SITE_TEMPLATE/"
 	else
 		echo 'template not found'
 		exit 1
@@ -277,7 +277,7 @@ edit() {
 switch() {
 	select_conf switch
 	cat <<- + > site.conf
-		. ~/.site/${number}.conf
+		. ~/.sitesh/${number}.conf
 	+
 	current_conf
 }
