@@ -368,13 +368,13 @@ make() {
 		html=$(. $template)
 		rss=$(cat <<- ++
 		cat << +
-		  <item>
-		    <title>$title</title>
-		    <link>\${URL}post/$post</link>
-		    <guid>\${URL}post/$post</guid>
-		    <pubDate>$pubdate</pubDate>
-		    <description><![CDATA[$sentence]]></description>
-		  </item>
+		    <item>
+		      <title>$title</title>
+		      <link>\${URL}post/$post</link>
+		      <guid>\${URL}post/$post</guid>
+		      <pubDate>$pubdate</pubDate>
+		      <description><![CDATA[$sentence]]></description>
+		    </item>
 		+
 		++
 		)
