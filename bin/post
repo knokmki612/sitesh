@@ -366,17 +366,17 @@ make() {
 			exit 1
 		fi
 		html=$(. $template)
-		rss=$(cat <<- +
-		cat << ++
-			<item>
-				<title>$title</title>
-				<link>\${URL}post/$post</link>
-				<guid>\${URL}post/$post</guid>
-				<pubDate>$pubdate</pubDate>
-				<description><![CDATA[$sentence]]></description>
-			</item>
-		++
+		rss=$(cat <<- ++
+		cat << +
+		  <item>
+		    <title>$title</title>
+		    <link>\${URL}post/$post</link>
+		    <guid>\${URL}post/$post</guid>
+		    <pubDate>$pubdate</pubDate>
+		    <description><![CDATA[$sentence]]></description>
+		  </item>
 		+
+		++
 		)
 		echo "$rss" | diff  $post/rss - > /dev/null 2>&1 || echo "$rss" > $post/rss &
 	else
