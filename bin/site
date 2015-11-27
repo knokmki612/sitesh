@@ -88,6 +88,7 @@ generate_conf() {
 	fi
 	cat <<- + > $1
 		export URL="$URL"
+		export DOMAIN=$(echo $URL | cut -d ':' -f 2 | tr -d '/')
 		export SSH_HOST="$SSH_HOST"
 		export SSH_KEY="$SSH_KEY"
 		export SERVER_PATH="$SERVER_PATH"

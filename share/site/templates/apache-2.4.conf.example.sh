@@ -1,7 +1,7 @@
 cat << +
 <VirtualHost *:80>
 	ServerAdmin webmaster@localhost
-	ServerName $SSH_HOST:80
+	ServerName $DOMAIN:80
 
 	DocumentRoot $SERVER_PATH
 
