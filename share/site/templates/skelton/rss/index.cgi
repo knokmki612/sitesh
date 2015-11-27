@@ -16,16 +16,16 @@ if [ "$request_key" = 'label' ]; then
 	request_param=$(echo $request_param | nkf --url-input)
 	label=" ($request_param)"
 	item=$(
-		find ../$SITE_POSTS_DIR -name label |
-		xargs grep -l "$request_param"      |
-		sed 's/\/label$/\/rss/'             |
-		sort -r                             |
+		find ../$POSTS -name label     |
+		xargs grep -l "$request_param" |
+		sed 's/\/label$/\/rss/'        |
+		sort -r                        |
 		xargs -I @ dash -c ". @")
 else
 	item=$(
-		find ../$SITE_POSTS_DIR -name rss |
-		grep -E '[0-9]{14}'               |
-		sort -r                           |
+		find ../$POSTS -name rss |
+		grep -E '[0-9]{14}'      |
+		sort -r                  |
 		xargs -I @ dash -c ". @")
 fi
 

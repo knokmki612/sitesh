@@ -3,8 +3,8 @@
 . ./site.conf
 
 entry=$(cat << +
-$(ls -f $SITE_POSTS_DIR | grep -oE '^[0-9]{4}')
-$(ls -f $SITE_POSTS_DIR | grep -oE '^[0-9]{6}')
+$(ls -f $POSTS | grep -oE '^[0-9]{4}')
+$(ls -f $POSTS | grep -oE '^[0-9]{6}')
 +
 )
 
@@ -19,7 +19,7 @@ cat << HEADER > archives
 cat << +
 <section>
   <h2>Archives</h2>
-  <form action="\$SITE_URL" method="GET">
+  <form action="\$URL" method="GET">
   <select class="archives" name="archive">
 HEADER
 

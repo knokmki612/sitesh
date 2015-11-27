@@ -1,16 +1,16 @@
 cat << +
 <VirtualHost *:80>
 	ServerAdmin webmaster@localhost
-	ServerName $SITE_DOMAIN:80
+	ServerName $SSH_HOST:80
 
-	DocumentRoot $SITE_ABSOLUTE_PATH
+	DocumentRoot $SERVER_PATH
 
 	<Directory />
 		Options FollowSymLinks
 		AllowOverride None
 	</Directory>
 
-	<Directory $SITE_ABSOLUTE_PATH>
+	<Directory $SERVER_PATH>
 		Options ExecCGI FollowSymLinks
 		AllowOverride None
 

@@ -22,32 +22,32 @@ usage() {
 current_conf() {
 	. ./site.conf
 	echo ""
-	echo "current selected site: $SITE_URL"
+	echo "current selected site: $URL"
 }
 
 input() {
 	case $1 in
-		SITE_URL)
+		URL)
 			input_msg="url: "
-			condition="echo \$SITE_URL | grep -sq 'http\?://'"
+			condition="echo \$URL | grep -sq 'http\?://'"
 			error_msg="please set url (http or https)"
 			;;
-		SITE_DOMAIN)
+		SSH_HOST)
 			input_msg="ssh host: "
 			condition="true"
 			;;
-		SITE_SSH_KEY)
+		SSH_KEY)
 			input_msg="ssh key: "
-			condition="[ -f \$(eval echo \$SITE_SSH_KEY) ]"
+			condition="[ -f \$(eval echo \$SSH_KEY) ]"
 			error_msg="please set corresponded ssh key"
 			;;
-		SITE_ABSOLUTE_PATH)
+		SERVER_PATH)
 			input_msg="server path: "
-			condition="echo \$SITE_ABSOLUTE_PATH | grep -sq '^/'"
+			condition="echo \$SERVER_PATH | grep -sq '^/'"
 			error_msg="please set absolute path for use in site"
 			;;
-		SITE_POSTS_DIR)
-			input_msg="posts dir: $(eval echo $SITE_ABSOLUTE_PATH)"
+		POSTS)
+			input_msg="posts dir: $(eval echo $SERVER_PATH)"
 			condition="true"
 			;;
 		SITE_TEMPLATE)
@@ -69,7 +69,7 @@ input() {
 			echo $error_msg
 		fi
 	done
-	if [ $1 = SITE_URL ] || [ $1 = SITE_ABSOLUTE_PATH ] || [ $1 = SITE_POSTS_DIR ]; then
+	if [ $1 = URL ] || [ $1 = SERVER_PATH ] || [ $1 = POSTS ]; then
 		eval $1=$(eval echo \$$1 | sed 's/\/\?$/\//')
 	fi
 }
@@ -79,19 +79,19 @@ generate_conf() {
 		. ./$1
 		input $2
 	else
-		input SITE_URL
-		input SITE_DOMAIN
-		input SITE_SSH_KEY
-		input SITE_ABSOLUTE_PATH
-		input SITE_POSTS_DIR
+		input URL
+		input SSH_HOST
+		input SSH_KEY
+		input SERVER_PATH
+		input POSTS
 		input SITE_TEMPLATE
 	fi
 	cat <<- + > $1
-		export SITE_URL="$SITE_URL"
-		export SITE_DOMAIN="$SITE_DOMAIN"
-		export SITE_SSH_KEY="$SITE_SSH_KEY"
-		export SITE_ABSOLUTE_PATH="$SITE_ABSOLUTE_PATH"
-		export SITE_POSTS_DIR="$SITE_POSTS_DIR"
+		export URL="$URL"
+		export SSH_HOST="$SSH_HOST"
+		export SSH_KEY="$SSH_KEY"
+		export SERVER_PATH="$SERVER_PATH"
+		export POSTS="$POSTS"
 		export SITE_TEMPLATE="$SITE_TEMPLATE"
 	+
 }
@@ -102,7 +102,7 @@ list_conf() {
 		echo "no. url hostname"
 		while [ -f ${number}.conf ]; do
 			. ./${number}.conf
-			echo "$number $SITE_URL $SITE_DOMAIN"
+			echo "$number $URL $SSH_HOST"
 			number=$(($number + 1))
 		done)
 	if [ $(echo "$list" | wc -l) -eq 1 ]; then
@@ -154,32 +154,32 @@ make() {
 	apache_conf=$(. $exec_dir/../share/site/templates/apache-2.4.conf.example.sh)
 	eval $(ssh-agent)
 	trap 'eval $(ssh-agent -k); exit 1' 1 2 3 15
-	eval ssh-add $SITE_SSH_KEY
-	ssh -t $SITE_DOMAIN "
+	eval ssh-add $SSH_KEY
+	ssh -t $SSH_HOST "
 		if ! type git > /dev/null 2>&1; then
 			echo 'required git, abort'
 			exit 1
 		fi
-		if [ ! -d $SITE_ABSOLUTE_PATH ]; then
-			sudo mkdir $SITE_ABSOLUTE_PATH
-			sudo chown \$USER:\$USER $SITE_ABSOLUTE_PATH
+		if [ ! -d $SERVER_PATH ]; then
+			sudo mkdir $SERVER_PATH
+			sudo chown \$USER:\$USER $SERVER_PATH
 		fi
-		if [ \$(find $SITE_ABSOLUTE_PATH | wc -l) -ne 1 ]; then
+		if [ \$(find $SERVER_PATH | wc -l) -ne 1 ]; then
 			echo 'this directory is already used, abort'
 			exit 1
 		fi
-		cd $SITE_ABSOLUTE_PATH
-		mkdir $SITE_POSTS_DIR
+		cd $SERVER_PATH
+		mkdir $POSTS
 		echo \"$apache_conf\" > apache-2.4.conf.example
 		cat <<- + > site.conf
-			export SITE_URL=\"$SITE_URL\"
-			export SITE_POSTS_DIR=\"$SITE_POSTS_DIR\"
-			export SITE_AUTHOR=\"$author\"
+			export URL=\"$URL\"
+			export POSTS=\"$POSTS\"
+			export COPYRIGHT_OWNER=\"$author\"
 			export SITE_NAME=\"$name\"
 			export SITE_DESCRIPTION=\"$description\"
-			export SITE_TITLE_TAIL=\" - \\\$SITE_NAME\"
-			export SITE_TITLE_TAIL_ENCODED=\\\$(
-			  echo \"\\\$SITE_TITLE_TAIL\" |
+			export TITLE_TAIL=\" - \\\$SITE_NAME\"
+			export TITLE_TAIL_ENCODED=\\\$(
+			  echo \"\\\$TITLE_TAIL\" |
 			  nkf -WwMQ               |
 			  sed 's/=$//'            |
 			  tr -d '\n'              |
@@ -197,9 +197,9 @@ make() {
 		echo 'template not found'
 		exit 1
 	fi
-	rsync -auvz -e ssh $template $SITE_DOMAIN:$SITE_ABSOLUTE_PATH
-	ssh $SITE_DOMAIN "
-		cd $SITE_ABSOLUTE_PATH
+	rsync -auvz -e ssh $template $SSH_HOST:$SERVER_PATH
+	ssh $SSH_HOST "
+		cd $SERVER_PATH
 		git init
 		if [ ! -f ~/.gitconfig ]; then
 			env echo -n 'git user name: '
@@ -219,11 +219,11 @@ show() {
 	. ./${number}.conf
 	echo ""
 	cat <<- + | column -t -s ','
-		url:,$SITE_URL
-		ssh host:,$SITE_DOMAIN
-		ssh key:,$SITE_SSH_KEY
-		server path:,$SITE_ABSOLUTE_PATH
-		posts dir:,$SITE_POSTS_DIR
+		url:,$URL
+		ssh host:,$SSH_HOST
+		ssh key:,$SSH_KEY
+		server path:,$SERVER_PATH
+		posts dir:,$POSTS
 		template:,$SITE_TEMPLATE
 	+
 	current_conf
@@ -235,30 +235,30 @@ edit() {
 		. ./${number}.conf
 		echo ""
 		cat <<- + | column -t -s ','
-			1,url:,$SITE_URL
-			2,ssh host:,$SITE_DOMAIN
-			3,ssh key:,$SITE_SSH_KEY
-			4,server path:,$SITE_ABSOLUTE_PATH
-			5,posts dir:,$SITE_POSTS_DIR
+			1,url:,$URL
+			2,ssh host:,$SSH_HOST
+			3,ssh key:,$SSH_KEY
+			4,server path:,$SERVER_PATH
+			5,posts dir:,$POSTS
 			6,template:,$SITE_TEMPLATE
 		+
 		env echo -en '\nselect element (q for quit): '
 		read element
 		case $element in
 			1)
-				generate_conf ${number}.conf SITE_URL
+				generate_conf ${number}.conf URL
 				;;
 			2)
-				generate_conf ${number}.conf SITE_DOMAIN
+				generate_conf ${number}.conf SSH_HOST
 				;;
 			3)
-				generate_conf ${number}.conf SITE_SSH_KEY
+				generate_conf ${number}.conf SSH_KEY
 				;;
 			4)
-				generate_conf ${number}.conf SITE_ABSOLUTE_PATH
+				generate_conf ${number}.conf SERVER_PATH
 				;;
 			5)
-				generate_conf ${number}.conf SITE_POSTS_DIR
+				generate_conf ${number}.conf POSTS
 				;;
 			6)
 				generate_conf ${number}.conf SITE_TEMPLATE

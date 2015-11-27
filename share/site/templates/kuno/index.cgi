@@ -20,9 +20,9 @@ for query in $queries; do
 
 	case $request_key in
 		post)
-			post=$(echo $request_param | sed 's;^;'$SITE_POSTS_DIR';g')
+			post=$(echo $request_param | sed 's;^;'$POSTS';g')
 			article=$(. ./$post/html)
-			title="$(cat $post/title)$SITE_TITLE_TAIL"
+			title="$(cat $post/title)$TITLE_TAIL"
 			break
 		;;
 		page)
@@ -70,7 +70,7 @@ for query in $queries; do
 						;;
 				esac
 
-				echo "<a class=\"$class\" href=\"$SITE_URL?$request_key=$request_param&amp;page=$page_next\">$text</a>"
+				echo "<a class=\"$class\" href=\"$URL?$request_key=$request_param&amp;page=$page_next\">$text</a>"
 			}
 
 			case $request_key in
@@ -82,8 +82,8 @@ for query in $queries; do
 						# 最新記事から順番にリストアップする
 						title="$SITE_NAME"
 						list=$(
-							find $SITE_POSTS_DIR -name html |
-							grep -E '[0-9]{14}'             |
+							find $POSTS -name html |
+							grep -E '[0-9]{14}'    |
 							sort -r)
 					else
 						pager_next=$(pager newer increase)
@@ -93,13 +93,13 @@ for query in $queries; do
 						year=$(echo $request_param | cut -c 1-4)
 						month=$(echo $request_param | cut -c 5-)
 						if [ -z "$month" ]; then
-							title="${year}年の記事$SITE_TITLE_TAIL"
+							title="${year}年の記事$TITLE_TAIL"
 						else
-							title="${year}年${month}月の記事$SITE_TITLE_TAIL"
+							title="${year}年${month}月の記事$TITLE_TAIL"
 						fi
 						list=$(
-							find $SITE_POSTS_DIR -name html          |
-							grep -e "^$SITE_POSTS_DIR$request_param" |
+							find $POSTS -name html          |
+							grep -e "^$POSTS$request_param" |
 							sort)
 					fi
 					;;
@@ -109,11 +109,11 @@ for query in $queries; do
 
 					# 特定のラベルの記事をリストアップする
 					request_param=$(echo $request_param | nkf --url-input)
-					title="\"${request_param}\"の記事$SITE_TITLE_TAIL"
+					title="\"${request_param}\"の記事$TITLE_TAIL"
 					list=$(
-						find $SITE_POSTS_DIR -name label        |
-						xargs grep -l "$request_param"          |
-						sed 's/\/label$/\/html/'                |
+						find $POSTS -name label        |
+						xargs grep -l "$request_param" |
+						sed 's/\/label$/\/html/'       |
 						sort -r)
 					;;
 				search)
@@ -129,7 +129,7 @@ for query in $queries; do
 							-e 's/&/\&amp;/g' \
 							-e 's/</\&lt;/g' \
 							-e 's/>/\&gt;/g')
-					title="\"$request_param\"の検索結果$SITE_TITLE_TAIL"
+					title="\"$request_param\"の検索結果$TITLE_TAIL"
 					request_param=$(
 						echo $request_param |
 						sed 's/ /\\|/g')

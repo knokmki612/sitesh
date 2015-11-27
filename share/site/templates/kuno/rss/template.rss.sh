@@ -4,7 +4,7 @@ cat << +
 
   <channel>
     <title>$SITE_NAME$label</title>
-    <link>${SITE_URL}</link>
+    <link>${URL}</link>
     <lastBuildDate>$date</lastBuildDate>
     <description>$SITE_DESCRIPTION</description>
     <language>ja</language>

@@ -144,7 +144,7 @@ make() {
 			$sed_exec 's/=$//' |
 			tr -d '\n'         |
 			tr = %)
-			labels_string="$labels_string<a href=\"\$SITE_URL?label=$label_encoded\">$label</a>,"
+			labels_string="$labels_string<a href=\"\$URL?label=$label_encoded\">$label</a>,"
 		done
 		labels_string=$(echo $labels_string | $sed_exec 's/,$//')
 
@@ -184,7 +184,7 @@ make() {
 			echo $image | cut -d ':' -f 3 | $sed_exec -e 's/^ *//g')
 		linenum=$(
 			echo $image | cut -d ':' -f 1)
-		filename_url="\$SITE_URL\${SITE_POSTS_DIR}$post/$filename"
+		filename_url="\$URL\${POSTS}$post/$filename"
 
 		if echo $image | grep -qE ':https?://[^:]*'; then
 			filename=$(
@@ -220,7 +220,7 @@ make() {
 
 		# 向き判定のついでに圧縮した画像を生成
 		filename_s=$(echo $filename | $sed_exec -e 's/\.\(png\|jpeg\|jpg\)/-s.jpg/')
-		filename_s_url="\$SITE_URL\${SITE_POSTS_DIR}$post/$filename_s"
+		filename_s_url="\$URL\${POSTS}$post/$filename_s"
 		width=$(
 			file $filepath                 |
 			grep -oE ", [0-9]+ ?x ?[0-9]+" |
@@ -370,8 +370,8 @@ make() {
 		cat << ++
 			<item>
 				<title>$title</title>
-				<link>\${SITE_URL}post/$post</link>
-				<guid>\${SITE_URL}post/$post</guid>
+				<link>\${URL}post/$post</link>
+				<guid>\${URL}post/$post</guid>
 				<pubDate>$pubdate</pubDate>
 				<description><![CDATA[$sentence]]></description>
 			</item>
@@ -454,17 +454,17 @@ send() {
 
 	eval $(ssh-agent)
 	trap 'eval $(ssh-agent -k); exit 1' 1 2 3 15
-	eval ssh-add $SITE_SSH_KEY
+	eval ssh-add $SSH_KEY
 	echo "$select_list" |
 	xargs -I {} rsync -auvz --delete -e ssh \
 		$(pwd)/{} \
-		$SITE_DOMAIN:$SITE_ABSOLUTE_PATH${SITE_POSTS_DIR}
+		$SSH_HOST:$SERVER_PATH${POSTS}
 
-	ssh $SITE_DOMAIN "
-		cd $SITE_ABSOLUTE_PATH
+	ssh $SSH_HOST "
+		cd $SERVER_PATH
 		find jobs -maxdepth 1 -type f | xargs -I{} sh {}
 		for post in \$(echo \""$select_list"\"); do
-			git add ${SITE_POSTS_DIR}\$post
+			git add ${POSTS}\$post
 			git commit -m \"deployed: \$post\"
 		done
 		git ls-remote origin --exit-code 1 > /dev/null 2>&1
@@ -479,10 +479,10 @@ send() {
 receive() {
 	eval $(ssh-agent)
 	trap 'eval $(ssh-agent -k); exit 1' 1 2 3 15
-	eval ssh-add $SITE_SSH_KEY
+	eval ssh-add $SSH_KEY
 	echo ""
 
-	list=$(ssh $SITE_DOMAIN "ls -U $SITE_ABSOLUTE_PATH$SITE_POSTS_DIR | sort -nr")
+	list=$(ssh $SSH_HOST "ls -U $SERVER_PATH$POSTS | sort -nr")
 	echo "$list" | nl
 
 	while true; do
@@ -505,7 +505,7 @@ receive() {
 	select_num=$(echo $select_num | $sed_exec 's/\([^ ]*\)/-e \1p/g')
 	echo ""
 
-	echo "$list" | $sed_exec -n $select_num | xargs -I {} rsync -auvz -e ssh $SITE_DOMAIN:$SITE_ABSOLUTE_PATH${SITE_POSTS_DIR}{} $(pwd)/
+	echo "$list" | $sed_exec -n $select_num | xargs -I {} rsync -auvz -e ssh $SSH_HOST:$SERVER_PATH${POSTS}{} $(pwd)/
 
 	echo ""
 	eval $(ssh-agent -k)
@@ -514,10 +514,10 @@ receive() {
 remove() {
 	eval $(ssh-agent)
 	trap 'eval $(ssh-agent -k); exit 1' 1 2 3 15
-	eval ssh-add $SITE_SSH_KEY
+	eval ssh-add $SSH_KEY
 	echo ""
 
-	list=$(ssh $SITE_DOMAIN "ls -U $SITE_ABSOLUTE_PATH$SITE_POSTS_DIR | sort -nr")
+	list=$(ssh $SSH_HOST "ls -U $SERVER_PATH$POSTS | sort -nr")
 	echo "$list" | nl
 
 	while true; do
@@ -541,10 +541,10 @@ remove() {
 	select_list=$(echo "$list" | $sed_exec -n $select_num)
 	echo ""
 
-	ssh $SITE_DOMAIN "
-		cd $SITE_ABSOLUTE_PATH
+	ssh $SSH_HOST "
+		cd $SERVER_PATH
 		for post in \$(echo \""$select_list"\"); do
-			git rm -r ${SITE_POSTS_DIR}\$post
+			git rm -r ${POSTS}\$post
 			git commit -m \"removed: \$post\"
 		done
 		git ls-remote origin --exit-code 1 > /dev/null 2>&1
