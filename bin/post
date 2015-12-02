@@ -199,7 +199,8 @@ make() {
 
 			# 既にローカルにファイルがあったら取ってこない
 			if [ -f "$filepath" ]; then
-				wget --spider $filename_url || exit 1
+				:
+#				wget --spider $filename_url || exit 1
 			else
 				wget $filename_url -O $filepath || exit 1
 			fi
