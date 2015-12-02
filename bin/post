@@ -478,6 +478,58 @@ send() {
 	echo ""
 }
 
+preview() {
+	list=$(
+		ls -U $(pwd)                              |
+		find . -mindepth 1 -maxdepth 2 -name html |
+		cut -d '/' -f 2                           |
+		sort -nr)
+
+	if [ -z "$list" ]; then
+		echo 'no such article in this directory.'
+		exit 1
+	fi
+
+	echo ""
+	echo "$list" | nl
+	while true; do
+		echo ""
+		env echo -n '(? for help, q for quit): '
+		read select_num
+		if echo $select_num | grep -sq '[0-9|,$]'; then
+			break
+		elif [ "$select_num" = '?' ]; then
+			echo ""
+			cat <<- +
+				example(single specification): 1 3 6 9
+				example(range specification): 2,5 10,$
+			+
+		elif [ "$select_num" = 'q' ]; then
+			exit 0
+		fi
+	done
+	select_num=$(echo $select_num | $sed_exec 's/\([^ ]*\)/-e \1p/g')
+	select_list=$(echo "$list" | $sed_exec -n $select_num)
+	echo ""
+
+	eval $(ssh-agent)
+	trap 'eval $(ssh-agent -k); exit 1' 1 2 3 15
+	eval ssh-add $SSH_KEY
+	echo "$select_list" |
+	xargs -I {} rsync -auvz --delete -e ssh \
+		$(pwd)/{} \
+		$SSH_HOST:${SERVER_PATH}preview/
+	eval $(ssh-agent -k)
+
+	echo ""
+	echo "url is"
+	for post in $(echo "$select_list"); do
+		echo "$URL?preview=$post"
+	done
+	echo ""
+
+}
+
 receive() {
 	eval $(ssh-agent)
 	trap 'eval $(ssh-agent -k); exit 1' 1 2 3 15
@@ -594,6 +646,7 @@ while [ $# -gt 0 ]; do
 			exit 0
 			;;
 		preview)
+			preview
 			exit 0
 			;;
 		*)

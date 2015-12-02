@@ -170,7 +170,7 @@ make() {
 			exit 1
 		fi
 		cd $SERVER_PATH
-		mkdir $POSTS
+		mkdir $POSTS preview cache jobs
 		echo \"$apache_conf\" > apache-2.4.conf.example
 		cat <<- + > site.conf
 			export URL=\"$URL\"
