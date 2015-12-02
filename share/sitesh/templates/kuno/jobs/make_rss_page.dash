@@ -7,8 +7,7 @@ labels=$(
 	xargs cat                |
 	LANG=ja_JP.UTF-8 sort -f |
 	uniq                     |
-	sed 's/^ *//g'           |
-	tr \  ,)
+	sed 's/^ *//g')
 
 cat << HEADER > cache/choose
 cat << +
@@ -19,9 +18,13 @@ cat << +
 <ul>
 HEADER
 
+BACKUP_IFS=$IFS
+IFS='
+'
 for label in $labels; do
 	echo "<li>$label <input type="checkbox" name="label" value="$label"></li>" >> cache/choose
 done
+IFS=$BACKUP_IFS
 
 cat << FOOTER >> cache/choose
 </ul>
