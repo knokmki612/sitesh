@@ -77,6 +77,11 @@ make() {
 		exit 1
 	fi
 
+# スペースを含んだメッセージに対応するため、スペース区切りを無効化
+	IFS_BACKUP=$IFS
+	IFS='
+'
+
 	if echo "$draft" | grep -sqE '^[0-9]{14}' ;then
 		raw_date=$(
 			echo $draft             |
@@ -166,10 +171,6 @@ make() {
 		sentence=$(cat $draft | $sed_exec '1,2d' | tr -d '\r')
 	fi
 
-# スペースを含んだメッセージに対応するため、スペース区切りを無効化
-	IFS_BACKUP=$IFS
-	IFS='
-	'
 # 上から順番に画像タグを検出
 	while true; do
 		image=$(echo "$sentence" |  grep -n -m 1 '.*\.\(png\|jpeg\|jpg\):')
