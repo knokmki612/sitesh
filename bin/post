@@ -296,7 +296,7 @@ make() {
 		}
 
 		pre="$(echo "$sentence" | grep -n '<pre\([^<]*>\)')
-	$(echo "$sentence" | grep -n '</pre\([^<]*>\)')"
+$(echo "$sentence" | grep -n '</pre\([^<]*>\)')"
 		pre=$(echo "$pre" | cut -d ':' -f 1 | sort -n)
 
 		pre_range=$(echo "$pre" | paste -d ',' - -)
@@ -327,8 +327,8 @@ make() {
 		done
 
 		pre="0
-	$pre
-	$(($(
+$pre
+$(($(
 			echo "$sentence" |
 			wc -l            |
 			cut -d ' ' -f 1) + 1))"
