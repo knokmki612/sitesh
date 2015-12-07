@@ -149,7 +149,7 @@ make() {
 	select_conf make
 	. ./${number}.conf
 	echo ""
-	input author
+	input owner
 	input name
 	input description
 	apache_conf=$(. $exec_dir/../share/sitesh/templates/apache-2.4.conf.example.sh)
@@ -175,7 +175,7 @@ make() {
 		cat <<- + > site.conf
 			export URL=\"$URL\"
 			export POSTS=\"$POSTS\"
-			export COPYRIGHT_OWNER=\"$author\"
+			export COPYRIGHT_OWNER=\"$owner\"
 			export SITE_NAME=\"$name\"
 			export SITE_DESCRIPTION=\"$description\"
 			export TITLE_TAIL=\" - \\\$SITE_NAME\"
