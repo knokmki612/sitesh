@@ -349,13 +349,15 @@ $(($(
 				sed_option="$sed_option -e \"${start},${end}s/&amp;\(lt;\|gt;\|quot;\)/\&\1/g\""
 			fi
 		done
+		sed_option="$sed_option -e \"s/\\\\\\:/:/g\""
 
 		sentence=$(echo "$sentence" | eval "$sed_exec $sed_option")
 	else
 		sentence=$(echo "$sentence" | $sed_exec \
 			-e 's/^$/<br>/g' \
 			-e 's/^\([^<| *].*\)/<p>\1<\/p>/g' \
-			-e 's/&/\&amp;/g')
+			-e 's/&/\&amp;/g' \
+			-e 's/\\:/:/g')
 	fi
 
 	if echo "$draft" | grep -sqE '^[0-9]{14}' ;then
