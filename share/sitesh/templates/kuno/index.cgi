@@ -168,7 +168,7 @@ for query in $queries; do
 						echo $request_param |
 						sed 's/ /\\|/g')
 					list=$(
-						grep -ie $request_param /cache/search |
+						grep -ie $request_param cache/search  |
 						cut -d ':' -f 1                       |
 						uniq -c                               |
 						sort -nr                              |
