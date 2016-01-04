@@ -71,7 +71,7 @@ make() {
 		cd ../
 	elif echo "$draft" | grep -sq '\.draft$'; then
 		# 初めて整形するファイルはとりあえずUTF-8に変換
-		nkf -w --overwrite $draft
+		nkf -xw --overwrite $draft
 	else
 		echo 'usage: draft2html [$(date +%Y%m%d%H%M%S).draft]'
 		exit 1
