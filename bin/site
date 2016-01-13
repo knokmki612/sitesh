@@ -29,7 +29,7 @@ input() {
 	case $1 in
 		URL)
 			input_msg="url: "
-			condition="echo \$URL | grep -sq 'http\?://'"
+			condition="echo \$URL | grep -sq 'https\?://'"
 			error_msg="please set url (http or https)"
 			;;
 		SSH_HOST)
