@@ -4,8 +4,6 @@ cd $(dirname $0)
 if [ -z "$prefix" ]; then
 	prefix=/usr/local
 fi
-bin=$prefix/bin
-share=$prefix/share
 
 if [ $# -ne 1 ]; then
 	cat <<- + 1>&2
@@ -27,6 +25,8 @@ uninstall() {
 	fi
 	prefix=$(echo $exist | sed 's/\/bin\/site//')
 	echo "prefix: $prefix"
+	bin=$prefix/bin
+	share=$prefix/share
 	for command in $(find bin -type f | xargs -I{} basename {}); do
 		rm -v $bin/$command || exit 1
 	done
