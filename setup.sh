@@ -19,6 +19,12 @@ install() {
 }
 
 uninstall() {
+	exist=$(type -p site)
+	if [ -z "$exist" ]; then
+		return 0
+	fi
+	prefix=$(echo $exist | sed 's/\/bin\/site//')
+	echo "prefix: $prefix"
 	for command in $(find bin -type f | xargs -I{} basename {}); do
 		rm -v $bin/$command || exit 1
 	done
@@ -27,6 +33,7 @@ uninstall() {
 
 case $1 in
 	install)
+		uninstall
 		install
 		;;
 	uninstall)
