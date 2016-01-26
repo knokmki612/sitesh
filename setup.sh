@@ -1,7 +1,9 @@
 #!/bin/sh
 
 cd $(dirname $0)
-prefix=/usr/local
+if [ -z "$prefix" ]; then
+	prefix=/usr/local
+fi
 bin=$prefix/bin
 share=$prefix/share
 
