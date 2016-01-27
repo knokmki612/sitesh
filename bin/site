@@ -24,6 +24,13 @@ if [ ! -d ~/.sitesh ]; then
 fi
 cd ~/.sitesh
 
+# MacやBSDで実行する際にgdateやgsedを使う
+if uname -s | grep -sq '\(BSD\|Darwin\)'; then
+	export sed_exec='gsed'
+else
+	export sed_exec='sed'
+fi
+
 usage() {
 	cat <<- +
 		usage: site version
@@ -87,7 +94,7 @@ input() {
 		fi
 	done
 	if [ $1 = URL ] || [ $1 = SERVER_PATH ] || [ $1 = POSTS ]; then
-		eval $1=$(eval echo \$$1 | sed 's/\/\?$/\//')
+		eval $1=$(eval echo \$$1 | $sed_exec 's/\/\?$/\//')
 	fi
 }
 
@@ -133,7 +140,8 @@ list_conf() {
 select_conf() {
 	list_conf
 	while true; do
-		env echo -en "\nselect $1 site of number (q for quit): "
+		echo ""
+		env echo -n "select $1 site of number (q for quit): "
 		read number
 		if [ $number = 'q' ]; then
 			exit 0
@@ -260,7 +268,8 @@ edit() {
 			5,posts dir:,$POSTS
 			6,template:,$SITE_TEMPLATE
 		+
-		env echo -en '\nselect element (q for quit): '
+		echo ""
+		env echo -n 'select element (q for quit): '
 		read element
 		case $element in
 			1)
