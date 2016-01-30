@@ -1,4 +1,4 @@
-#!/bin/dash
+#!/bin/sh
 
 . ../site.conf
 
@@ -20,13 +20,13 @@ if [ "$request_key" = 'label' ]; then
 		xargs grep -l "$request_param" |
 		sed 's/\/label$/\/rss/'        |
 		sort -r                        |
-		xargs -I @ dash -c ". @")
+		xargs -I @ sh -c ". @")
 else
 	item=$(
 		find ../$POSTS -name rss |
 		grep -E '[0-9]{14}'      |
 		sort -r                  |
-		xargs -I @ dash -c ". @")
+		xargs -I @ sh -c ". @")
 fi
 
 . ./template.rss.sh

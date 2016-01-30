@@ -1,4 +1,4 @@
-#!/bin/dash
+#!/bin/sh
 
 . ./site.conf
 
@@ -191,13 +191,13 @@ for query in $queries; do
 					echo "$list"                                      |
 					head -n $(( $listcount % $numofdisplay > 0 \
 						? $listcount % $numofdisplay : $numofdisplay )) |
-					xargs -I @ dash -c ". ./@")
+					xargs -I @ sh -c ". ./@")
 			elif [ $page -eq 1 ]; then
 				#echo "表示する記事が${numofdisplay}つより多いけど1ページ目の場合はこちら"
 				article=$(
 					echo "$list"          |
 					head -n $displaycount |
-					xargs -I @ dash -c ". ./@")
+					xargs -I @ sh -c ". ./@")
 				pager=$(
 					cat <<- PAGER
 					<aside id="pager" class="clearfix">
@@ -211,7 +211,7 @@ for query in $queries; do
 					echo "$list"                                      |
 					tail -n $(( $listcount % $numofdisplay > 0 \
 						? $listcount % $numofdisplay : $numofdisplay )) |
-					xargs -I @ dash -c ". ./@")
+					xargs -I @ sh -c ". ./@")
 				pager=$(
 					cat <<- PAGER
 					<aside id="pager" class="clearfix">
@@ -225,7 +225,7 @@ for query in $queries; do
 					echo "$list"          |
 					head -n $displaycount |
 					tail -n $numofdisplay |
-					xargs -I @ dash -c ". ./@")
+					xargs -I @ sh -c ". ./@")
 				pager=$(
 					cat <<- PAGER
 					<aside id="pager" class="clearfix">
