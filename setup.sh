@@ -5,14 +5,14 @@ if [ -z "$prefix" ]; then
 	prefix=/usr/local
 fi
 
-if [ $# -ne 1 ]; then
+usage() {
 	cat <<- + 1>&2
 		please execute with subcommand 'install' or 'uninstall'.
 		
 		example: setup.sh install
 	+
 	exit 0
-fi
+}
 
 install() {
 	cp -rv bin share $prefix || exit 1
@@ -40,6 +40,9 @@ case $1 in
 		;;
 	uninstall)
 		uninstall
+		;;
+		*)
+		usage
 		;;
 esac
 
