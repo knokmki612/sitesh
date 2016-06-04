@@ -16,7 +16,7 @@
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 LICENSE
 
-VERSION='0.0.1'
+VERSION='0.0.2'
 exec_dir=$(cd $(dirname "$0") && pwd)
 
 if [ ! -f ~/.sitesh/site.conf ]; then
@@ -166,7 +166,7 @@ make() {
 			$sed_exec 's/=$//' |
 			tr -d '\n'         |
 			tr = %)
-			labels_string="$labels_string<a href=\"\$URL?label=$label_encoded\">$label</a>,"
+			labels_string="$labels_string<a href=\\\"\$URL?label=$label_encoded\\\">$label</a>,"
 		done
 		labels_string=$(echo $labels_string | $sed_exec 's/,$//')
 
@@ -234,7 +234,7 @@ make() {
 		fi
 
 		if [ ! -f "$post/$filename" ]; then
-			cp $filepath $post/$filename &
+			mv $filepath $post/$filename &
 		fi
 
 		# 向き判定のついでに圧縮した画像を生成
@@ -378,15 +378,6 @@ $(($(
 	fi
 
 	if echo "$draft" | grep -sqE '^[0-9]{14}' ;then
-		if [ -f "~/.sitesh/templates/$SITE_TEMPLATE/template-article.html.sh" ]; then
-			template="~/.sitesh/templates/$SITE_TEMPLATE/template-article.html.sh"
-		elif [ -f "$exec_dir/../share/sitesh/templates/$SITE_TEMPLATE/template-article.html.sh" ]; then
-			template="$exec_dir/../share/sitesh/templates/$SITE_TEMPLATE/template-article.html.sh"
-		else
-			echo 'template not found'
-			exit 1
-		fi
-		html=$(. $template)
 		rss=$(cat <<- ++
 		cat << +
 		    <item>
@@ -400,23 +391,26 @@ $(($(
 		++
 		)
 		echo "$rss" | diff  $post/rss - > /dev/null 2>&1 || echo "$rss" > $post/rss &
-	else
-		html=$(cat <<- +
-			<article>
-			$sentence
-			</article>
-			+
-		)
 	fi
 
-# ヒアドキュメントでテンプレート化
-	html=$(echo "$html" | $sed_exec -e '1icat << +' -e '$a+')
-
+	html=$(cat <<- ++
+		post="$post"
+		formatted_date="$formatted_date"
+		datetime="$datetime"
+		title="$title"
+		title_encoded="$title_encoded"
+		labels_string="$labels_string"
+		sentence=\$(cat << +
+		$sentence
+		+
+		)
+	++
+	)
 
 	echo "$title" | diff  $post/title - > /dev/null 2>&1 || echo "$title" > $post/title &
 	echo "$html" | diff  $post/html - > /dev/null 2>&1 || echo "$html" > $post/html &
 	if [ ! "$draft" = "$post/draft" ]; then
-		cp $draft $post/draft &
+		mv $draft $post/draft &
 	fi
 
 	wait

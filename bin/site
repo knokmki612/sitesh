@@ -16,7 +16,7 @@
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 LICENSE
 
-VERSION='0.0.1'
+VERSION='0.0.2'
 exec_dir=$(cd $(dirname "$0") && pwd)
 
 if [ ! -d ~/.sitesh ]; then
