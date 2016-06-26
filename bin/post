@@ -347,10 +347,7 @@ $(echo "$sentence" | grep -n '</pre\([^<]*>\)')"
 
 		pre="0
 $pre
-$(($(
-			echo "$sentence" |
-			wc -l            |
-			cut -d ' ' -f 1) + 1))"
+$(($(echo "$sentence" | wc -l) + 1))"
 
 		pre_range=$(echo "$pre" | paste -d ',' - -)
 
