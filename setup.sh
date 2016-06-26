@@ -15,7 +15,7 @@ usage() {
 }
 
 install() {
-	cp -rv bin share $prefix || exit 1
+	cp -r bin share $prefix || exit 1
 }
 
 uninstall() {
@@ -28,9 +28,9 @@ uninstall() {
 	bin=$prefix/bin
 	share=$prefix/share
 	for command in $(find bin -type f | xargs -I{} basename {}); do
-		rm -v $bin/$command || exit 1
+		rm $bin/$command || exit 1
 	done
-	rm -rv $share/sitesh || exit 1
+	rm -r $share/sitesh || exit 1
 }
 
 case $1 in
