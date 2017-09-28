@@ -19,11 +19,10 @@ install() {
 }
 
 uninstall() {
-	exist=$(type -p site)
-	if [ -z "$exist" ]; then
+	if ! which site; then
 		return 0
 	fi
-	prefix=$(echo $exist | sed 's/\/bin\/site//')
+	prefix=$(which site | sed 's/\/bin\/site//')
 	echo "prefix: $prefix"
 	bin=$prefix/bin
 	share=$prefix/share
