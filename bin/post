@@ -384,7 +384,9 @@ $(($(echo "$sentence" | wc -l) + 1))"
 		      <link>\${URL}post/$post</link>
 		      <guid>\${URL}post/$post</guid>
 		      <pubDate>$pubdate</pubDate>
-		      <description><![CDATA[$sentence]]></description>
+		      <content:encoded><![CDATA[<p>RSSフィードは記事の内容が最新と異なっている可能性があります。<a href="\${URL}?history=$post">編集履歴</a>をご確認ください</p>
+		<hr>
+		$sentence]]></content:encoded>
 		    </item>
 		+
 		++
